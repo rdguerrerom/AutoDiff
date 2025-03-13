@@ -1,0 +1,56 @@
+cmake_minimum_required(VERSION 3.12)
+project(AutoDiff LANGUAGES C CXX)
+
+# Compiler Enforcement
+find_program(GCC_14_C_COMPILER NAMES gcc-14)
+find_program(GCC_14_CXX_COMPILER NAMES g++-14)
+
+if(NOT GCC_14_C_COMPILER OR NOT GCC_14_CXX_COMPILER)
+    message(FATAL_ERROR "Required compilers gcc-14/g++-14 not found. "
+            "Install with:\n"
+            "  sudo apt install gcc-14 g++-14")
+else()
+    set(CMAKE_C_COMPILER "${GCC_14_C_COMPILER}")
+    set(CMAKE_CXX_COMPILER "${GCC_14_CXX_COMPILER}")
+endif()
+
+# Modern C++ Standard Configuration
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Build Type Configuration
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING
+        "Choose build type: Debug or Release" FORCE)
+endif()
+
+# Global Compiler Flags
+add_compile_options(
+    "$<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic;-Werror>"
+    "$<$<COMPILE_LANGUAGE:C>:-Wall;-Wextra;-Wpedantic;-Werror>"
+)
+
+# Configuration-Specific Flags
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+
+# Project Structure
+add_subdirectory(AutoDiff)
+
+# Testing Configuration (CTest)
+option(BUILD_TESTING "Build tests" OFF)
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(test)
+endif()
+
+# Examples Configuration
+option(BUILD_EXAMPLES "Build examples" ON)
+if(BUILD_EXAMPLES)
+    add_subdirectory(bin/examples)
+endif()
+
+# Installation Configuration
+install(DIRECTORY AutoDiff/ DESTINATION include/AutoDiff)

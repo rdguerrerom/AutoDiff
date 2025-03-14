@@ -8,8 +8,11 @@ add_executable(AutoDiffTests
     test_operations.cpp
     test_functions.cpp
     test_validation.cpp
+    test_edge_cases.cpp  # New
+    test_hyperbolic.cpp  # New
+    test_composite.cpp   # New
+    test_multivariable.cpp  # New
 )
-
 # Link dependencies
 target_link_libraries(AutoDiffTests PRIVATE
     AutoDiff

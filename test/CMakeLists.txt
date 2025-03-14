@@ -13,6 +13,7 @@ add_executable(AutoDiffTests
     test_composite.cpp   # New
     test_multivariable.cpp  # New
     test_rules.cpp
+    test_elementary_functions.cpp
 )
 # Link dependencies
 target_link_libraries(AutoDiffTests PRIVATE

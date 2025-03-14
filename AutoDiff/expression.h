@@ -264,19 +264,31 @@ public:
         auto base = this->left_->clone();
         auto exponent = this->right_->clone();
         
+        auto dBase = this->left_->differentiate(variable);
+        auto dExponent = this->right_->differentiate(variable);
+
+        // Term1: exponent * base^(exponent - 1) * dBase
         auto term1 = std::make_unique<Multiplication<T>>(
             exponent->clone(),
-            std::make_unique<Pow<T>>(
-                base->clone(),
-                std::make_unique<Subtraction<T>>(exponent->clone(), std::make_unique<Constant<T>>(1))
+            std::make_unique<Multiplication<T>>(
+                std::make_unique<Pow<T>>(
+                    base->clone(),
+                    std::make_unique<Subtraction<T>>(  // Fixed parenthesis here
+                        exponent->clone(), 
+                        std::make_unique<Constant<T>>(1)
+                    )  // Added closing ) for Subtraction
+                ),
+                std::move(dBase)
             )
         );
 
+        // Term2: base^exponent * ln(base) * dExponent
         auto term2 = std::make_unique<Multiplication<T>>(
-            this->clone(),
             std::make_unique<Multiplication<T>>(
-                std::make_unique<Log<T>>(base->clone()),
-                this->right_->differentiate(variable))
+                this->clone(),
+                std::make_unique<Log<T>>(base->clone())
+            ),
+            std::move(dExponent)
         );
 
         return std::make_unique<Addition<T>>(std::move(term1), std::move(term2));

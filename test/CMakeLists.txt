@@ -1,11 +1,20 @@
-# Add test sources
-add_executable(autodiff_test test_main.cpp test_dual.cpp test_expressions.cpp)
-target_link_libraries(autodiff_test PRIVATE AutoDiff)
+cmake_minimum_required(VERSION 3.12)
 
-# Google Test configuration (example)
-find_package(GTest REQUIRED)
-target_link_libraries(autodiff_test PRIVATE GTest::GTest GTest::Main)
+project(AutoDiffTests)
 
-# Add test cases
-add_test(NAME DualNumberTest COMMAND autodiff_test --gtest_filter=DualNumber.*)
-add_test(NAME ExpressionTest COMMAND autodiff_test --gtest_filter=Expression.*)
+# Create test executable
+add_executable(AutoDiffTests
+    test_basic.cpp
+    test_operations.cpp
+    test_functions.cpp
+    test_validation.cpp
+)
+
+# Link dependencies
+target_link_libraries(AutoDiffTests PRIVATE
+    AutoDiff
+    Catch2::Catch2WithMain
+)
+
+# Add to CTest
+add_test(NAME AutoDiffTests COMMAND AutoDiffTests)

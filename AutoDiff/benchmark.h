@@ -56,7 +56,7 @@ BenchmarkResult measure_performance(Func&& func, int iterations = 1000) {
     }
     
     auto end_time = std::chrono::high_resolution_clock::now();
-    const long end_mem = detail::get_memory_usage_kb();
+    //const long end_mem = detail::get_memory_usage_kb();
     
     // Calculate results
     std::chrono::duration<double, std::milli> duration = end_time - start_time;

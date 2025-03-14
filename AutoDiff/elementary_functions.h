@@ -2,156 +2,170 @@
 #pragma once
 #include "expression.h"
 #include <cmath>
-#include <limits>
+#include <stdexcept>
 
 namespace ad {
 namespace expr {
 
-// ==================== ERROR FUNCTIONS ====================
+// ==================== BASIC MATH FUNCTIONS ====================
 template <typename T>
-class Erf : public UnaryOperation<T> {
+class Exp : public UnaryOperation<T> {
 public:
     using UnaryOperation<T>::UnaryOperation;
 
     T evaluate() const override {
-        return std::erf(this->operand_->evaluate());
+        return std::exp(this->operand_->evaluate());
     }
 
     ExprPtr<T> differentiate(const std::string& variable) const override {
-        const T sqrt_pi = std::sqrt(std::acos(-T(1)));  // Compute sqrt(π)
-        const T factor = T(2) / sqrt_pi;
-
-        auto exponent = make_expression<T, Multiplication<T>>(
-            make_constant<T>(-1),
-            make_expression<T, Pow<T>>(
-                this->operand_->clone(),
-                make_constant<T>(2)
-            )
-        );
-
-        return make_expression<T, Multiplication<T>>(
-            make_constant<T>(factor),
-            make_expression<T, Multiplication<T>>(
-                make_expression<T, Exp<T>>(exponent),
-                this->operand_->differentiate(variable)
-            )
-        );
-    }
-
-    ExprPtr<T> clone() const override {
-        return make_expression<T, Erf<T>>(this->operand_->clone());
-    }
-};
-
-template <typename T>
-class Erfc : public UnaryOperation<T> {
-public:
-    using UnaryOperation<T>::UnaryOperation;
-
-    T evaluate() const override {
-        return std::erfc(this->operand_->evaluate());
-    }
-
-    ExprPtr<T> differentiate(const std::string& variable) const override {
-        return make_expression<T, Multiplication<T>>(
-            make_constant<T>(-1),
-            make_expression<T, Erf<T>>(this->operand_->clone())
-                ->differentiate(variable)
-        );
-    }
-
-    ExprPtr<T> clone() const override {
-        return make_expression<T, Erfc<T>>(this->operand_->clone());
-    }
-};
-
-// ==================== GAMMA FUNCTIONS ====================
-template <typename T>
-class Tgamma : public UnaryOperation<T> {
-public:
-    using UnaryOperation<T>::UnaryOperation;
-
-    T evaluate() const override {
-        return std::tgamma(this->operand_->evaluate());
-    }
-
-    ExprPtr<T> differentiate(const std::string& variable) const override {
-        // Derivative: tgamma(x) * digamma(x) * dx
-        // Note: digamma not in standard library - symbolic representation
-        return make_expression<T, Multiplication<T>>(
+        return std::make_unique<Multiplication<T>>(
             this->clone(),
-            make_expression<T, Multiplication<T>>(
-                make_expression<T, Digamma<T>>(this->operand_->clone()),
+            this->operand_->differentiate(variable)
+        );
+    }
+
+    ExprPtr<T> clone() const override {
+        return std::make_unique<Exp<T>>(this->operand_->clone());
+    }
+};
+
+template <typename T>
+class Log : public UnaryOperation<T> {
+public:
+    using UnaryOperation<T>::UnaryOperation;
+
+    T evaluate() const override {
+        return std::log(this->operand_->evaluate());
+    }
+
+    ExprPtr<T> differentiate(const std::string& variable) const override {
+        return std::make_unique<Multiplication<T>>(
+            std::make_unique<Reciprocal<T>>(this->operand_->clone()),
+            this->operand_->differentiate(variable)
+        );
+    }
+
+    ExprPtr<T> clone() const override {
+        return std::make_unique<Log<T>>(this->operand_->clone());
+    }
+};
+
+template <typename T>
+class Sqrt : public UnaryOperation<T> {
+public:
+    using UnaryOperation<T>::UnaryOperation;
+
+    T evaluate() const override {
+        return std::sqrt(this->operand_->evaluate());
+    }
+
+    ExprPtr<T> differentiate(const std::string& variable) const override {
+        return std::make_unique<Multiplication<T>>(
+            std::make_unique<Constant<T>>(0.5),
+            std::make_unique<Multiplication<T>>(
+                std::make_unique<Reciprocal<T>>(this->clone()),
                 this->operand_->differentiate(variable)
             )
         );
     }
 
     ExprPtr<T> clone() const override {
-        return make_expression<T, Tgamma<T>>(this->operand_->clone());
+        return std::make_unique<Sqrt<T>>(this->operand_->clone());
     }
 };
 
 template <typename T>
-class Lgamma : public UnaryOperation<T> {
+class Reciprocal : public UnaryOperation<T> {
 public:
     using UnaryOperation<T>::UnaryOperation;
 
     T evaluate() const override {
-        return std::lgamma(this->operand_->evaluate());
+        return T(1) / this->operand_->evaluate();
     }
 
     ExprPtr<T> differentiate(const std::string& variable) const override {
-        // Derivative: digamma(x) * dx
-        return make_expression<T, Multiplication<T>>(
-            make_expression<T, Digamma<T>>(this->operand_->clone()),
+        return std::make_unique<Multiplication<T>>(
+            std::make_unique<Constant<T>>(-1),
+            std::make_unique<Multiplication<T>>(
+                std::make_unique<Pow<T>>(this->clone(), std::make_unique<Constant<T>>(2)),
+                this->operand_->differentiate(variable)
+            )
+        );
+    }
+
+    ExprPtr<T> clone() const override {
+        return std::make_unique<Reciprocal<T>>(this->operand_->clone());
+    }
+};
+
+// ==================== TRIGONOMETRIC FUNCTIONS ====================
+template <typename T>
+class Sin : public UnaryOperation<T> {
+public:
+    using UnaryOperation<T>::UnaryOperation;
+
+    T evaluate() const override {
+        return std::sin(this->operand_->evaluate());
+    }
+
+    ExprPtr<T> differentiate(const std::string& variable) const override {
+        return std::make_unique<Multiplication<T>>(
+            std::make_unique<Cos<T>>(this->operand_->clone()),
             this->operand_->differentiate(variable)
         );
     }
 
     ExprPtr<T> clone() const override {
-        return make_expression<T, Lgamma<T>>(this->operand_->clone());
+        return std::make_unique<Sin<T>>(this->operand_->clone());
     }
 };
 
-// ==================== ABSOLUTE VALUE ====================
 template <typename T>
-class Abs : public UnaryOperation<T> {
+class Cos : public UnaryOperation<T> {
 public:
     using UnaryOperation<T>::UnaryOperation;
 
     T evaluate() const override {
-        return std::abs(this->operand_->evaluate());
+        return std::cos(this->operand_->evaluate());
     }
 
     ExprPtr<T> differentiate(const std::string& variable) const override {
-        return make_expression<T, Multiplication<T>>(
-            make_expression<T, Sign<T>>(this->operand_->clone()),
+        return std::make_unique<Multiplication<T>>(
+            std::make_unique<Constant<T>>(-1),
+            std::make_unique<Multiplication<T>>(
+                std::make_unique<Sin<T>>(this->operand_->clone()),
+                this->operand_->differentiate(variable)
+            )
+        );
+    }
+
+    ExprPtr<T> clone() const override {
+        return std::make_unique<Cos<T>>(this->operand_->clone());
+    }
+};
+
+template <typename T>
+class Tan : public UnaryOperation<T> {
+public:
+    using UnaryOperation<T>::UnaryOperation;
+
+    T evaluate() const override {
+        return std::tan(this->operand_->evaluate());
+    }
+
+    ExprPtr<T> differentiate(const std::string& variable) const override {
+        auto sec_sq = std::make_unique<Addition<T>>(
+            std::make_unique<Constant<T>>(1),
+            std::make_unique<Pow<T>>(this->clone(), std::make_unique<Constant<T>>(2))
+        );
+        return std::make_unique<Multiplication<T>>(
+            std::move(sec_sq),
             this->operand_->differentiate(variable)
         );
     }
 
     ExprPtr<T> clone() const override {
-        return make_expression<T, Abs<T>>(this->operand_->clone());
-    }
-};
-
-template <typename T>
-class Sign : public UnaryOperation<T> {
-public:
-    using UnaryOperation<T>::UnaryOperation;
-
-    T evaluate() const override {
-        T val = this->operand_->evaluate();
-        return (T(0) < val) - (val < T(0));
-    }
-
-    ExprPtr<T> differentiate(const std::string& variable) const override {
-        return make_constant<T>(0);  // Derivative of sign function is 0 almost everywhere
-    }
-
-    ExprPtr<T> clone() const override {
-        return make_expression<T, Sign<T>>(this->operand_->clone());
+        return std::make_unique<Tan<T>>(this->operand_->clone());
     }
 };
 
@@ -166,14 +180,14 @@ public:
     }
 
     ExprPtr<T> differentiate(const std::string& variable) const override {
-        return make_expression<T, Multiplication<T>>(
-            make_expression<T, Cosh<T>>(this->operand_->clone()),
+        return std::make_unique<Multiplication<T>>(
+            std::make_unique<Cosh<T>>(this->operand_->clone()),
             this->operand_->differentiate(variable)
         );
     }
 
     ExprPtr<T> clone() const override {
-        return make_expression<T, Sinh<T>>(this->operand_->clone());
+        return std::make_unique<Sinh<T>>(this->operand_->clone());
     }
 };
 
@@ -187,14 +201,14 @@ public:
     }
 
     ExprPtr<T> differentiate(const std::string& variable) const override {
-        return make_expression<T, Multiplication<T>>(
-            make_expression<T, Sinh<T>>(this->operand_->clone()),
+        return std::make_unique<Multiplication<T>>(
+            std::make_unique<Sinh<T>>(this->operand_->clone()),
             this->operand_->differentiate(variable)
         );
     }
 
     ExprPtr<T> clone() const override {
-        return make_expression<T, Cosh<T>>(this->operand_->clone());
+        return std::make_unique<Cosh<T>>(this->operand_->clone());
     }
 };
 
@@ -208,20 +222,18 @@ public:
     }
 
     ExprPtr<T> differentiate(const std::string& variable) const override {
-        auto sech_sq = make_expression<T, Subtraction<T>>(
-            make_constant<T>(1),
-            make_expression<T, Pow<T>>(
-                this->clone(),
-                make_constant<T>(2)
+        auto sech_sq = std::make_unique<Subtraction<T>>(
+            std::make_unique<Constant<T>>(1),
+            std::make_unique<Pow<T>>(this->clone(), std::make_unique<Constant<T>>(2))
         );
-        return make_expression<T, Multiplication<T>>(
-            sech_sq,
+        return std::make_unique<Multiplication<T>>(
+            std::move(sech_sq),
             this->operand_->differentiate(variable)
         );
     }
 
     ExprPtr<T> clone() const override {
-        return make_expression<T, Tanh<T>>(this->operand_->clone());
+        return std::make_unique<Tanh<T>>(this->operand_->clone());
     }
 };
 
@@ -236,23 +248,20 @@ public:
     }
 
     ExprPtr<T> differentiate(const std::string& variable) const override {
-        auto denominator = make_expression<T, Sqrt<T>>(
-            make_expression<T, Addition<T>>(
-                make_expression<T, Pow<T>>(
-                    this->operand_->clone(),
-                    make_constant<T>(2)
-                ),
-                make_constant<T>(1)
+        auto denominator = std::make_unique<Sqrt<T>>(
+            std::make_unique<Addition<T>>(
+                std::make_unique<Pow<T>>(this->operand_->clone(), std::make_unique<Constant<T>>(2)),
+                std::make_unique<Constant<T>>(1)
             )
         );
-        return make_expression<T, Multiplication<T>>(
-            make_expression<T, Reciprocal<T>>(denominator),
+        return std::make_unique<Multiplication<T>>(
+            std::make_unique<Reciprocal<T>>(std::move(denominator)),
             this->operand_->differentiate(variable)
         );
     }
 
     ExprPtr<T> clone() const override {
-        return make_expression<T, Asinh<T>>(this->operand_->clone());
+        return std::make_unique<Asinh<T>>(this->operand_->clone());
     }
 };
 
@@ -266,23 +275,20 @@ public:
     }
 
     ExprPtr<T> differentiate(const std::string& variable) const override {
-        auto denominator = make_expression<T, Sqrt<T>>(
-            make_expression<T, Subtraction<T>>(
-                make_expression<T, Pow<T>>(
-                    this->operand_->clone(),
-                    make_constant<T>(2)
-                ),
-                make_constant<T>(1)
+        auto denominator = std::make_unique<Sqrt<T>>(
+            std::make_unique<Subtraction<T>>(
+                std::make_unique<Pow<T>>(this->operand_->clone(), std::make_unique<Constant<T>>(2)),
+                std::make_unique<Constant<T>>(1)
             )
         );
-        return make_expression<T, Multiplication<T>>(
-            make_expression<T, Reciprocal<T>>(denominator),
+        return std::make_unique<Multiplication<T>>(
+            std::make_unique<Reciprocal<T>>(std::move(denominator)),
             this->operand_->differentiate(variable)
         );
     }
 
     ExprPtr<T> clone() const override {
-        return make_expression<T, Acosh<T>>(this->operand_->clone());
+        return std::make_unique<Acosh<T>>(this->operand_->clone());
     }
 };
 
@@ -296,32 +302,86 @@ public:
     }
 
     ExprPtr<T> differentiate(const std::string& variable) const override {
-        auto denominator = make_expression<T, Subtraction<T>>(
-            make_constant<T>(1),
-            make_expression<T, Pow<T>>(
-                this->operand_->clone(),
-                make_constant<T>(2)
-            )
+        auto denominator = std::make_unique<Subtraction<T>>(
+            std::make_unique<Constant<T>>(1),
+            std::make_unique<Pow<T>>(this->operand_->clone(), std::make_unique<Constant<T>>(2))
         );
-        return make_expression<T, Multiplication<T>>(
-            make_expression<T, Reciprocal<T>>(denominator),
+        return std::make_unique<Multiplication<T>>(
+            std::make_unique<Reciprocal<T>>(std::move(denominator)),
             this->operand_->differentiate(variable)
         );
     }
 
     ExprPtr<T> clone() const override {
-        return make_expression<T, Atanh<T>>(this->operand_->clone());
+        return std::make_unique<Atanh<T>>(this->operand_->clone());
     }
 };
 
-// ==================== DIGAMMA PLACEHOLDER ====================
+// ==================== SPECIAL FUNCTIONS ====================
+// elementary_functions.h (partial fix for Erf)
+template <typename T>
+class Erf : public UnaryOperation<T> {
+public:
+    using UnaryOperation<T>::UnaryOperation;
+
+    T evaluate() const override {
+        return std::erf(this->operand_->evaluate());
+    }
+
+    ExprPtr<T> differentiate(const std::string& variable) const override {
+        const T factor = 2 / std::sqrt(std::acos(-T(1)));
+        auto inner_mult = std::make_unique<Multiplication<T>>(
+            std::make_unique<Constant<T>>(-1),
+            std::make_unique<Pow<T>>(
+                this->operand_->clone(),
+                std::make_unique<Constant<T>>(2)
+            )
+        );
+        auto exp_term = std::make_unique<Exp<T>>(std::move(inner_mult));
+        auto outer_mult = std::make_unique<Multiplication<T>>(
+            std::move(exp_term),
+            this->operand_->differentiate(variable)
+        );
+        return std::make_unique<Multiplication<T>>(
+            std::make_unique<Constant<T>>(factor),
+            std::move(outer_mult)
+        );
+    }
+
+    ExprPtr<T> clone() const override {
+        auto cloned = std::make_unique<Erf<T>>(this->operand_->clone());
+        return cloned;
+    }
+};
+
+template <typename T>
+class Erfc : public UnaryOperation<T> {
+public:
+    using UnaryOperation<T>::UnaryOperation;
+
+    T evaluate() const override {
+        return std::erfc(this->operand_->evaluate());
+    }
+
+    ExprPtr<T> differentiate(const std::string& variable) const override {
+        return std::make_unique<Multiplication<T>>(
+            std::make_unique<Constant<T>>(-1),
+            std::make_unique<Erf<T>>(this->operand_->clone())->differentiate(variable)
+        );
+    }
+
+    ExprPtr<T> clone() const override {
+        return std::make_unique<Erfc<T>>(this->operand_->clone());
+    }
+};
+
+// ==================== GAMMA FUNCTIONS ====================
 template <typename T>
 class Digamma : public UnaryOperation<T> {
 public:
     using UnaryOperation<T>::UnaryOperation;
 
     T evaluate() const override {
-        // Placeholder implementation - would require external library
         throw std::runtime_error("Digamma implementation not available");
     }
 
@@ -330,7 +390,52 @@ public:
     }
 
     ExprPtr<T> clone() const override {
-        return make_expression<T, Digamma<T>>(this->operand_->clone());
+        return std::make_unique<Digamma<T>>(this->operand_->clone());
+    }
+};
+
+template <typename T>
+class Tgamma : public UnaryOperation<T> {
+public:
+    using UnaryOperation<T>::UnaryOperation;
+
+    T evaluate() const override {
+        return std::tgamma(this->operand_->evaluate());
+    }
+
+    ExprPtr<T> differentiate(const std::string& variable) const override {
+        return std::make_unique<Multiplication<T>>(
+            this->clone(),
+            std::make_unique<Multiplication<T>>(
+                std::make_unique<Digamma<T>>(this->operand_->clone()),
+                this->operand_->differentiate(variable)
+            )
+        );
+    }
+
+    ExprPtr<T> clone() const override {
+        return std::make_unique<Tgamma<T>>(this->operand_->clone());
+    }
+};
+
+template <typename T>
+class Lgamma : public UnaryOperation<T> {
+public:
+    using UnaryOperation<T>::UnaryOperation;
+
+    T evaluate() const override {
+        return std::lgamma(this->operand_->evaluate());
+    }
+
+    ExprPtr<T> differentiate(const std::string& variable) const override {
+        return std::make_unique<Multiplication<T>>(
+            std::make_unique<Digamma<T>>(this->operand_->clone()),
+            this->operand_->differentiate(variable)
+        );
+    }
+
+    ExprPtr<T> clone() const override {
+        return std::make_unique<Lgamma<T>>(this->operand_->clone());
     }
 };
 

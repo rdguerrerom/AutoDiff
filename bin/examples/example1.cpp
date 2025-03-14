@@ -1,45 +1,36 @@
-// examples.cpp
-#include "expression.h"
-#include "elementary_functions.h"
-#include "validation.h"
+// example1.cpp
+#include "../AutoDiff/expression.h"
+#include "../AutoDiff/elementary_functions.h"
+#include "../AutoDiff/validation.h"
+#include "../AutoDiff/benchmark.h"
 #include <iostream>
 
 void run_examples() {
     using namespace ad::expr;
-    
-    // Example 1: Polynomial
-    auto x = make_variable<double>("x", 2.0);
-    auto poly = make_expression<double, Addition<double>>(
-        make_expression<double, Multiplication<double>>(
-            x->clone(),
-            make_expression<double, Addition<double>>(
-                x->clone(),
-                make_constant<double>(3.0)
-            )
-        ),
-        make_constant<double>(2.0)
-    );
-    
-    auto deriv = poly->differentiate("x");
-    std::cout << "Polynomial derivative at x=2: " << deriv->evaluate() << std::endl;
 
-    // Example 2: Trigonometric function
-    auto sin_expr = make_expression<double, Sin<double>>(
-        make_expression<double, Multiplication<double>>(
+    
+    auto x = std::make_unique<Variable<double>>("x", 2.0);
+    auto sin_expr = std::make_unique<Sin<double>>(
+        std::make_unique<Pow<double>>(
             x->clone(),
-            x->clone()
+            std::make_unique<Constant<double>>(2)
         )
     );
-    
-    // Validation
-    bool valid = ad::test::validate_derivative(*sin_expr, *x, 0.5);
-    std::cout << "Derivative validation: " << (valid ? "PASSED" : "FAILED") << std::endl;
 
-    // Benchmark
+    // Validate derivative of sin(x^2) at x=0.5
+    bool valid = ad::test::validate_derivative(
+        *sin_expr,  // The expression to differentiate
+        *x,         // The variable to differentiate with respect to
+        0.5         // Test point
+    );
+    std::cout << "Derivative validation: " << (valid ? "Passed" : "Failed") << std::endl;
+    
+    // Benchmarking
     auto bench = ad::benchmark::measure_performance([&]() {
         sin_expr->evaluate();
     });
-    std::cout << "Evaluation time: " << bench.time_ms << "ms\n";
+    std::cout << "Benchmark - Average time per iteration: " << bench.time_ms << " ms\n";
+    std::cout << "Benchmark - Memory delta: " << bench.memory_kb << " KB\n";
 }
 
 int main() {

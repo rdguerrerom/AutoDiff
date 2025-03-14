@@ -3,6 +3,7 @@
 #include "expression.h"
 #include <cmath>
 #include <iostream>
+#include <functional>
 
 namespace ad {
 namespace test {
@@ -19,7 +20,7 @@ T finite_difference(
 template <typename T>
 bool validate_derivative(
     expr::Expression<T>& expr,
-    expr::Variable<T>& var,
+    expr::Variable<T>& var,  // Changed to take variable reference
     T point,
     T tolerance = static_cast<T>(1e-5)
 ) {
@@ -41,6 +42,5 @@ bool validate_derivative(
 
     return error < tolerance;
 }
-
 } // namespace test
 } // namespace ad

@@ -12,6 +12,7 @@ add_executable(AutoDiffTests
     test_hyperbolic.cpp  # New
     test_composite.cpp   # New
     test_multivariable.cpp  # New
+    test_rules.cpp
 )
 # Link dependencies
 target_link_libraries(AutoDiffTests PRIVATE

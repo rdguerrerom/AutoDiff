@@ -1,4 +1,8 @@
-// elementary_functions.h
+/**
+ * @file elementary_functions.h
+ * @brief Elementary function implementations and their derivatives
+ */
+
 #pragma once
 #include "expression.h"
 #include <cmath>

@@ -27,8 +27,9 @@ add_executable(stage2_tests
     test_computational_graph.cpp
     test_reverse_mode.cpp
     test_control_flow.cpp
-    #    test_custom_functions.cpp
+    test_custom_functions.cpp
     test_optimizer.cpp  # Moved here
+    test_forward_mode.cpp
 )
 target_link_libraries(stage2_tests PRIVATE 
     AutoDiff 

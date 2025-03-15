@@ -27,20 +27,25 @@ public:
         }
     }
 
-    std::unordered_map<std::string, T> compute_gradients(
-        std::shared_ptr<graph::GraphNode<T>> output_node
-    ) {
-        // Reset gradients before backward pass
-        for (auto& [name, node] : variables_) node->reset_gradient();
-        output_node->backward(T(1));
-        
-        // Collect results
-        std::unordered_map<std::string, T> gradients;
-        for (auto& [name, node] : variables_) {
-            gradients[name] = node->get_gradient();
-        }
-        return gradients;
+std::unordered_map<std::string, T> compute_gradients(
+    std::shared_ptr<graph::GraphNode<T>> output_node
+) {
+    // Reset gradients before backward pass
+    for (auto& [name, node] : variables_) node->reset_gradient();
+    
+    // Ensure forward pass is complete
+    output_node->forward();
+    
+    // Start backward pass from output node
+    output_node->backward(T(1));
+    
+    // Collect results
+    std::unordered_map<std::string, T> gradients;
+    for (auto& [name, node] : variables_) {
+        gradients[name] = node->get_gradient();
     }
+    return gradients;
+}
 
 private:
     std::unordered_map<std::string, std::shared_ptr<graph::VariableNode<T>>> variables_;

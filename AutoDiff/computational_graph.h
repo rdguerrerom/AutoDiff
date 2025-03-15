@@ -89,9 +89,12 @@ public:
     const std::string& name() const { return name_; }
 
     T forward() override { return this->value_; }
+
     void backward(const T& gradient) override {
         this->gradient_ += gradient; // Fixed: Accumulate gradients
     }
+
+
 
 private:
     std::string name_;

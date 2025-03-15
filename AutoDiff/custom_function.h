@@ -6,54 +6,85 @@
 #pragma once
 #include "computational_graph.h"
 #include <vector>
+#include <functional>
+#include <stdexcept>
 
 namespace ad {
 namespace graph {
 
-template <typename T, typename ForwardFunc, typename BackwardFunc>
+template <typename T>
 class CustomFunctionNode : public GraphNode<T> {
 public:
     using NodePtr = typename GraphNode<T>::Ptr;
+    
+    // Function type that takes an array of values and returns a single value
+    using ForwardFuncType = std::function<T(const std::vector<T>&)>;
+    
+    // Function type that takes an array of values and a gradient, returns gradients
+    using BackwardFuncType = std::function<std::vector<T>(const std::vector<T>&, T)>;
 
-    CustomFunctionNode(ForwardFunc forward, BackwardFunc backward)
-        : forward_func_(std::move(forward)),
-          backward_func_(std::move(backward)) {}
+    CustomFunctionNode(ForwardFuncType forward_func, BackwardFuncType backward_func)
+        : forward_func_(std::move(forward_func)),
+          backward_func_(std::move(backward_func)) {}
 
     T forward() override {
+        // Collect input values
         std::vector<T> input_values;
         for (const auto& input : this->inputs_) {
-            input_values.push_back(input->forward());
+            if (input) {
+                input_values.push_back(input->forward());
+            }
         }
+        
+        // Apply forward function
         this->value_ = forward_func_(input_values);
         return this->value_;
     }
 
     void backward(const T& gradient) override {
+        // Collect input values
         std::vector<T> input_values;
         for (const auto& input : this->inputs_) {
-            input_values.push_back(input->get_value());
+            if (input) {
+                input_values.push_back(input->get_value());
+            }
         }
+        
+        // Compute gradients
         std::vector<T> input_grads = backward_func_(input_values, gradient);
-        for (size_t i = 0; i < this->inputs_.size(); ++i) {
-            this->inputs_[i]->backward(input_grads[i]);
+        
+        // Apply gradients to inputs, with safety checks
+        size_t num_inputs = this->inputs_.size();
+        size_t num_grads = input_grads.size();
+        
+        for (size_t i = 0; i < num_inputs && i < num_grads; ++i) {
+            if (this->inputs_[i]) {
+                this->inputs_[i]->backward(input_grads[i]);
+            }
         }
     }
 
 private:
-    ForwardFunc forward_func_;
-    BackwardFunc backward_func_;
+    ForwardFuncType forward_func_;
+    BackwardFuncType backward_func_;
 };
 
-template <typename T, typename ForwardFunc, typename BackwardFunc>
-auto make_custom_function(std::vector<typename GraphNode<T>::Ptr> inputs,
-                          ForwardFunc&& forward_func,
-                          BackwardFunc&& backward_func) {
-    auto node = std::make_shared<CustomFunctionNode<T, ForwardFunc, BackwardFunc>>(
-        std::forward<ForwardFunc>(forward_func),
-        std::forward<BackwardFunc>(backward_func));
+// Helper function to create a custom function node
+template <typename T>
+auto make_custom_function(
+    std::vector<typename GraphNode<T>::Ptr> inputs,
+    typename CustomFunctionNode<T>::ForwardFuncType forward_func,
+    typename CustomFunctionNode<T>::BackwardFuncType backward_func) {
+    
+    auto node = std::make_shared<CustomFunctionNode<T>>(
+        std::move(forward_func), std::move(backward_func));
+    
     for (const auto& input : inputs) {
-        node->add_input(input);
+        if (input) {
+            node->add_input(input);
+        }
     }
+    
     return node;
 }
 

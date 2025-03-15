@@ -106,18 +106,16 @@ TEST(OptimizerTest, PerformanceMonitoring) {
 
 TEST(OptimizerTest, ErrorHandlingInOptimizer) {
     // Test error handling for division by zero
-    auto x = std::make_unique<expr::Variable<double>>("x", 1.0);
+    auto x = std::make_unique<expr::Variable<double>>("x", 0.0); // Added initial value
     auto zero = std::make_unique<expr::Constant<double>>(0.0);
-    
-    // Create x / 0
     auto div_by_zero = x->clone() / zero->clone();
+
+    // Provide the optimizer with the constant value for 'x'
+    std::unordered_map<std::string, double> constants = {{"x", 1.0}};
+    ExpressionOptimizer<double> optimizer(constants);
     
-    ExpressionOptimizer<double> optimizer;
-    
-    // The optimization process should throw an exception for division by zero
-    // during constant folding
+    // The optimization should throw due to division by zero during folding
     EXPECT_THROW(optimizer.optimize(std::move(div_by_zero)), std::domain_error);
 }
-
 } // namespace optimizer
 } // namespace ad

@@ -5,7 +5,7 @@
 #include <utility>
 #include <cmath>
 #include <stdexcept>
-#include <unordered_map>  // Added missing header
+#include <unordered_map>
 
 namespace ad {
 namespace expr {
@@ -78,7 +78,6 @@ private:
 template <typename T>
 class Variable : public Expression<T> {
 public:
-    // Public constructor with mandatory initial value
     explicit Variable(std::string name, T initial_value)
         : name_(std::move(name)) {
         set_value(initial_value);
@@ -101,7 +100,6 @@ public:
     }
 
     ExprPtr<T> clone() const override {
-        // Use name() accessor instead of copy constructor
         return std::make_unique<Variable<T>>(name(), evaluate());
     }
 
@@ -120,6 +118,11 @@ class BinaryOperation : public Expression<T> {
 public:
     BinaryOperation(ExprPtr<T> left, ExprPtr<T> right)
         : left_(std::move(left)), right_(std::move(right)) {}
+
+    virtual ExprPtr<T> clone_with(ExprPtr<T> new_left, ExprPtr<T> new_right) const = 0;
+
+    const expr::ExprPtr<T>& left() const { return left_; }
+    const expr::ExprPtr<T>& right() const { return right_; }  
 
 protected:
     ExprPtr<T> left_;
@@ -149,6 +152,10 @@ public:
             this->right_->clone()
         );
     }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_left, ExprPtr<T> new_right) const override {
+        return std::make_unique<Addition<T>>(std::move(new_left), std::move(new_right));
+    }
 };
 
 // Subtraction operation
@@ -173,6 +180,10 @@ public:
             this->left_->clone(),
             this->right_->clone()
         );
+    }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_left, ExprPtr<T> new_right) const override {
+        return std::make_unique<Subtraction<T>>(std::move(new_left), std::move(new_right));
     }
 };
 
@@ -207,6 +218,10 @@ public:
             this->left_->clone(),
             this->right_->clone()
         );
+    }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_left, ExprPtr<T> new_right) const override {
+        return std::make_unique<Multiplication<T>>(std::move(new_left), std::move(new_right));
     }
 };
 
@@ -248,6 +263,10 @@ public:
             this->right_->clone()
         );
     }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_left, ExprPtr<T> new_right) const override {
+        return std::make_unique<Division<T>>(std::move(new_left), std::move(new_right));
+    }
 };
 
 // Power operation
@@ -273,10 +292,10 @@ public:
             std::make_unique<Multiplication<T>>(
                 std::make_unique<Pow<T>>(
                     base->clone(),
-                    std::make_unique<Subtraction<T>>(  // Fixed parenthesis here
+                    std::make_unique<Subtraction<T>>(
                         exponent->clone(), 
                         std::make_unique<Constant<T>>(1)
-                    )  // Added closing ) for Subtraction
+                    )
                 ),
                 std::move(dBase)
             )
@@ -300,6 +319,10 @@ public:
             this->right_->clone()
         );
     }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_left, ExprPtr<T> new_right) const override {
+        return std::make_unique<Pow<T>>(std::move(new_left), std::move(new_right));
+    }
 };
 
 // Unary operation base class
@@ -308,6 +331,9 @@ class UnaryOperation : public Expression<T> {
 public:
     explicit UnaryOperation(ExprPtr<T> operand)
         : operand_(std::move(operand)) {}
+
+    const expr::ExprPtr<T>& operand() const { return operand_; }
+    virtual expr::ExprPtr<T> clone_with(expr::ExprPtr<T> new_operand) const = 0;
 
 protected:
     ExprPtr<T> operand_;
@@ -331,12 +357,26 @@ public:
     ExprPtr<T> clone() const override {
         return std::make_unique<Sign<T>>(this->operand_->clone());
     }
+
+    expr::ExprPtr<T> clone_with(expr::ExprPtr<T> new_operand) const override {
+        return std::make_unique<Sign<T>>(std::move(new_operand));
+    }
 };
 
 // Operator overloads
 template <typename T>
+ExprPtr<T> operator+(ExprPtr<T> a, ExprPtr<T> b) {
+    return std::make_unique<Addition<T>>(std::move(a), std::move(b));
+}
+
+template <typename T>
 ExprPtr<T> operator-(ExprPtr<T> a, ExprPtr<T> b) {
     return std::make_unique<Subtraction<T>>(std::move(a), std::move(b));
+}
+
+template <typename T>
+ExprPtr<T> operator*(ExprPtr<T> a, ExprPtr<T> b) {
+    return std::make_unique<Multiplication<T>>(std::move(a), std::move(b));
 }
 
 template <typename T>

@@ -31,6 +31,10 @@ public:
     ExprPtr<T> clone() const override {
         return std::make_unique<Exp<T>>(this->operand_->clone());
     }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Exp<T>>(std::move(new_operand));
+    }
 };
 
 template <typename T>
@@ -51,6 +55,10 @@ public:
 
     ExprPtr<T> clone() const override {
         return std::make_unique<Log<T>>(this->operand_->clone());
+    }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Log<T>>(std::move(new_operand));
     }
 };
 
@@ -76,6 +84,10 @@ public:
     ExprPtr<T> clone() const override {
         return std::make_unique<Sqrt<T>>(this->operand_->clone());
     }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Sqrt<T>>(std::move(new_operand));
+    }
 };
 
 template <typename T>
@@ -100,6 +112,10 @@ public:
     ExprPtr<T> clone() const override {
         return std::make_unique<Reciprocal<T>>(this->operand_->clone());
     }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Reciprocal<T>>(std::move(new_operand));
+    }
 };
 
 // ==================== TRIGONOMETRIC FUNCTIONS ====================
@@ -121,6 +137,10 @@ public:
 
     ExprPtr<T> clone() const override {
         return std::make_unique<Sin<T>>(this->operand_->clone());
+    }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Sin<T>>(std::move(new_operand));
     }
 };
 
@@ -145,6 +165,10 @@ public:
 
     ExprPtr<T> clone() const override {
         return std::make_unique<Cos<T>>(this->operand_->clone());
+    }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Cos<T>>(std::move(new_operand));
     }
 };
 
@@ -171,6 +195,10 @@ public:
     ExprPtr<T> clone() const override {
         return std::make_unique<Tan<T>>(this->operand_->clone());
     }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Tan<T>>(std::move(new_operand));
+    }
 };
 
 // ==================== HYPERBOLIC FUNCTIONS ====================
@@ -193,6 +221,10 @@ public:
     ExprPtr<T> clone() const override {
         return std::make_unique<Sinh<T>>(this->operand_->clone());
     }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Sinh<T>>(std::move(new_operand));
+    }
 };
 
 template <typename T>
@@ -213,6 +245,10 @@ public:
 
     ExprPtr<T> clone() const override {
         return std::make_unique<Cosh<T>>(this->operand_->clone());
+    }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Cosh<T>>(std::move(new_operand));
     }
 };
 
@@ -238,6 +274,10 @@ public:
 
     ExprPtr<T> clone() const override {
         return std::make_unique<Tanh<T>>(this->operand_->clone());
+    }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Tanh<T>>(std::move(new_operand));
     }
 };
 
@@ -267,6 +307,10 @@ public:
     ExprPtr<T> clone() const override {
         return std::make_unique<Asinh<T>>(this->operand_->clone());
     }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Asinh<T>>(std::move(new_operand));
+    }
 };
 
 template <typename T>
@@ -294,6 +338,10 @@ public:
     ExprPtr<T> clone() const override {
         return std::make_unique<Acosh<T>>(this->operand_->clone());
     }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Acosh<T>>(std::move(new_operand));
+    }
 };
 
 template <typename T>
@@ -319,10 +367,13 @@ public:
     ExprPtr<T> clone() const override {
         return std::make_unique<Atanh<T>>(this->operand_->clone());
     }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Atanh<T>>(std::move(new_operand));
+    }
 };
 
 // ==================== SPECIAL FUNCTIONS ====================
-// elementary_functions.h (partial fix for Erf)
 template <typename T>
 class Erf : public UnaryOperation<T> {
 public:
@@ -333,7 +384,9 @@ public:
     }
 
     ExprPtr<T> differentiate(const std::string& variable) const override {
-        const T factor = 2 / std::sqrt(std::acos(-T(1)));
+        const T pi = std::acos(-T(1));
+        const T factor = T(2) / std::sqrt(pi);
+        
         auto inner_mult = std::make_unique<Multiplication<T>>(
             std::make_unique<Constant<T>>(-1),
             std::make_unique<Pow<T>>(
@@ -353,8 +406,11 @@ public:
     }
 
     ExprPtr<T> clone() const override {
-        auto cloned = std::make_unique<Erf<T>>(this->operand_->clone());
-        return cloned;
+        return std::make_unique<Erf<T>>(this->operand_->clone());
+    }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Erf<T>>(std::move(new_operand));
     }
 };
 
@@ -377,6 +433,10 @@ public:
     ExprPtr<T> clone() const override {
         return std::make_unique<Erfc<T>>(this->operand_->clone());
     }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Erfc<T>>(std::move(new_operand));
+    }
 };
 
 // ==================== GAMMA FUNCTIONS ====================
@@ -395,6 +455,10 @@ public:
 
     ExprPtr<T> clone() const override {
         return std::make_unique<Digamma<T>>(this->operand_->clone());
+    }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Digamma<T>>(std::move(new_operand));
     }
 };
 
@@ -420,6 +484,10 @@ public:
     ExprPtr<T> clone() const override {
         return std::make_unique<Tgamma<T>>(this->operand_->clone());
     }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Tgamma<T>>(std::move(new_operand));
+    }
 };
 
 template <typename T>
@@ -440,6 +508,10 @@ public:
 
     ExprPtr<T> clone() const override {
         return std::make_unique<Lgamma<T>>(this->operand_->clone());
+    }
+
+    ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
+        return std::make_unique<Lgamma<T>>(std::move(new_operand));
     }
 };
 

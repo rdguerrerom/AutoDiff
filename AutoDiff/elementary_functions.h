@@ -11,6 +11,38 @@
 namespace ad {
 namespace expr {
 
+// Forward declarations
+template <typename T> class Expression;
+template <typename T> class Constant;
+template <typename T> class Variable;
+template <typename T> class Addition;
+template <typename T> class Subtraction;
+template <typename T> class Multiplication;
+template <typename T> class Division;
+template <typename T> class Pow;
+template <typename T> class UnaryOperation;
+template <typename T> class Sign;
+
+// Elementary function forward declarations
+template <typename T> class Sin;
+template <typename T> class Cos;
+template <typename T> class Tan;
+template <typename T> class Exp;
+template <typename T> class Log;
+template <typename T> class Sqrt;
+template <typename T> class Reciprocal;
+template <typename T> class Erf;
+template <typename T> class Erfc;
+template <typename T> class Tgamma;
+template <typename T> class Lgamma;
+template <typename T> class Sinh;
+template <typename T> class Cosh;
+template <typename T> class Tanh;
+template <typename T> class Asinh;
+template <typename T> class Acosh;
+template <typename T> class Atanh;
+
+
 // ==================== BASIC MATH FUNCTIONS ====================
 template <typename T>
 class Exp : public UnaryOperation<T> {

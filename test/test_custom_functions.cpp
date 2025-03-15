@@ -1,6 +1,7 @@
 #include "../AutoDiff/custom_function.h"
 #include "../AutoDiff/computational_graph.h"
 #include <gtest/gtest.h>
+#include <stdexcept>
 
 namespace ad {
 namespace graph {
@@ -12,10 +13,21 @@ TEST(CustomFunctionTest, UserDefinedForwardBackward) {
     auto custom = make_custom_function<double>(
         {x, y},
         [](const std::vector<double>& inputs) { 
-            return inputs[0]*inputs[0] + inputs[1]*inputs[1]*inputs[1];
+            if (inputs.size() < 2) {
+                throw std::out_of_range("Insufficient inputs in forward");
+                __builtin_unreachable(); // Tell analyzer execution stops here
+            }
+            return inputs[0] * inputs[0] + inputs[1] * inputs[1] * inputs[1];
         },
         [](const std::vector<double>& inputs, double grad) { 
-            return std::vector<double>{2*inputs[0]*grad, 3*inputs[1]*inputs[1]*grad};
+            if (inputs.size() < 2) {
+                throw std::out_of_range("Insufficient inputs in backward");
+                __builtin_unreachable();
+            }
+            return std::vector<double>{
+                2 * inputs[0] * grad,
+                3 * inputs[1] * inputs[1] * grad
+            };
         }
     );
 

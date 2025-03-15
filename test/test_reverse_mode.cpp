@@ -15,7 +15,7 @@ TEST(ReverseModeTest, SingleVariableGradient) {
     );
     
     auto gradients = rm.compute_gradients(y);
-    EXPECT_DOUBLE_EQ(gradients["x"], (4.0 + 1.0) * std::exp(4.0));
+    EXPECT_DOUBLE_EQ(gradients["x"], (4.0 + 1.0) * std::exp(4.0)); 
 }
 
 } // namespace reverse

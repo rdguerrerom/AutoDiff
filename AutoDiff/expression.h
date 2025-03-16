@@ -50,6 +50,7 @@ public:
     virtual T evaluate() const = 0;
     virtual std::unique_ptr<Expression<T>> differentiate(const std::string& variable) const = 0;
     virtual std::unique_ptr<Expression<T>> clone() const = 0;
+    virtual std::string to_string() const = 0;
 };
 
 template <typename T>
@@ -69,6 +70,10 @@ public:
 
     ExprPtr<T> clone() const override {
         return std::make_unique<Constant<T>>(value_);
+    }
+
+    std::string to_string() const override {
+        return std::to_string(value_);
     }
 
 private:
@@ -104,6 +109,10 @@ public:
         return std::make_unique<Variable<T>>(name(), evaluate());
     }
 
+    std::string to_string() const override {
+        return name_;
+    }
+
 private:
     std::string name_;
     
@@ -124,6 +133,12 @@ public:
 
     const expr::ExprPtr<T>& left() const { return left_; }
     const expr::ExprPtr<T>& right() const { return right_; }  
+
+    virtual std::string op_symbol() const = 0;
+    
+    std::string to_string() const override {
+        return "(" + left_->to_string() + " " + op_symbol() + " " + right_->to_string() + ")";
+    }
 
 protected:
     ExprPtr<T> left_;
@@ -157,6 +172,9 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_left, ExprPtr<T> new_right) const override {
         return std::make_unique<Addition<T>>(std::move(new_left), std::move(new_right));
     }
+
+    std::string op_symbol() const override { return "+"; }
+
 };
 
 // Subtraction operation
@@ -186,6 +204,9 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_left, ExprPtr<T> new_right) const override {
         return std::make_unique<Subtraction<T>>(std::move(new_left), std::move(new_right));
     }
+
+    std::string op_symbol() const override { return "-"; }
+
 };
 
 // Multiplication operation
@@ -224,6 +245,9 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_left, ExprPtr<T> new_right) const override {
         return std::make_unique<Multiplication<T>>(std::move(new_left), std::move(new_right));
     }
+
+  std::string op_symbol() const override { return "*"; }
+
 };
 
 // Division operation
@@ -268,6 +292,9 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_left, ExprPtr<T> new_right) const override {
         return std::make_unique<Division<T>>(std::move(new_left), std::move(new_right));
     }
+
+  std::string op_symbol() const override { return "/"; }
+
 };
 
 // Power operation
@@ -324,6 +351,9 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_left, ExprPtr<T> new_right) const override {
         return std::make_unique<Pow<T>>(std::move(new_left), std::move(new_right));
     }
+
+  std::string op_symbol() const override { return "^"; }
+
 };
 
 // Unary operation base class
@@ -335,6 +365,11 @@ public:
 
     const expr::ExprPtr<T>& operand() const { return operand_; }
     virtual expr::ExprPtr<T> clone_with(expr::ExprPtr<T> new_operand) const = 0;
+
+    virtual std::string func_name() const = 0;
+    std::string to_string() const override {
+        return func_name() + "(" + operand_->to_string() + ")";
+    }
 
 protected:
     ExprPtr<T> operand_;
@@ -362,6 +397,9 @@ public:
     expr::ExprPtr<T> clone_with(expr::ExprPtr<T> new_operand) const override {
         return std::make_unique<Sign<T>>(std::move(new_operand));
     }
+
+  std::string func_name() const override { return "sign"; }
+
 };
 
 // Operator overloads

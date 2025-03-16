@@ -67,6 +67,8 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Exp<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "exp"; }
 };
 
 template <typename T>
@@ -92,6 +94,8 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Log<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "log"; }
 };
 
 template <typename T>
@@ -120,6 +124,8 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Sqrt<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "sqrt"; }
 };
 
 template <typename T>
@@ -148,6 +154,13 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Reciprocal<T>>(std::move(new_operand));
     }
+
+    std::string to_string() const override {
+        return "1/(" + this->operand_->to_string() + ")";
+    }
+    // Override func_name if needed, though to_string is directly implemented
+    std::string func_name() const override { return ""; } // Not used
+
 };
 
 // ==================== TRIGONOMETRIC FUNCTIONS ====================
@@ -174,6 +187,9 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Sin<T>>(std::move(new_operand));
     }
+
+  std::string func_name() const override { return "sin"; }
+
 };
 
 template <typename T>
@@ -202,6 +218,9 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Cos<T>>(std::move(new_operand));
     }
+
+  std::string func_name() const override { return "cos"; }
+
 };
 
 template <typename T>
@@ -231,6 +250,8 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Tan<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "tan"; }
 };
 
 // ==================== HYPERBOLIC FUNCTIONS ====================
@@ -257,6 +278,8 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Sinh<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "sinh"; }
 };
 
 template <typename T>
@@ -282,6 +305,8 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Cosh<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "cosh"; }
 };
 
 template <typename T>
@@ -311,6 +336,8 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Tanh<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "tanh"; }
 };
 
 // ==================== INVERSE HYPERBOLIC FUNCTIONS ====================
@@ -343,6 +370,8 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Asinh<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "asinh"; }
 };
 
 template <typename T>
@@ -374,6 +403,8 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Acosh<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "acosh"; }
 };
 
 template <typename T>
@@ -403,6 +434,8 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Atanh<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "atanh"; }
 };
 
 // ==================== SPECIAL FUNCTIONS ====================
@@ -444,6 +477,8 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Erf<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "erf"; }
 };
 
 template <typename T>
@@ -469,6 +504,9 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Erfc<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "erfc"; }
+
 };
 
 // ==================== GAMMA FUNCTIONS ====================
@@ -492,6 +530,8 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Digamma<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "digamma"; }
 };
 
 template <typename T>
@@ -520,6 +560,8 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Tgamma<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "tgamma"; }
 };
 
 template <typename T>
@@ -545,7 +587,95 @@ public:
     ExprPtr<T> clone_with(ExprPtr<T> new_operand) const override {
         return std::make_unique<Lgamma<T>>(std::move(new_operand));
     }
+
+    std::string func_name() const override { return "lgamma"; }
 };
+
+// ==================== ELEMENTARY FUNCTION FACTORIES ====================
+template <typename T>
+ExprPtr<T> sin(ExprPtr<T> operand) {
+    return std::make_unique<Sin<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> cos(ExprPtr<T> operand) {
+    return std::make_unique<Cos<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> tan(ExprPtr<T> operand) {
+    return std::make_unique<Tan<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> exp(ExprPtr<T> operand) {
+    return std::make_unique<Exp<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> log(ExprPtr<T> operand) {
+    return std::make_unique<Log<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> sqrt(ExprPtr<T> operand) {
+    return std::make_unique<Sqrt<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> reciprocal(ExprPtr<T> operand) {
+    return std::make_unique<Reciprocal<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> erf(ExprPtr<T> operand) {
+    return std::make_unique<Erf<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> erfc(ExprPtr<T> operand) {
+    return std::make_unique<Erfc<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> tgamma(ExprPtr<T> operand) {
+    return std::make_unique<Tgamma<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> lgamma(ExprPtr<T> operand) {
+    return std::make_unique<Lgamma<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> sinh(ExprPtr<T> operand) {
+    return std::make_unique<Sinh<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> cosh(ExprPtr<T> operand) {
+    return std::make_unique<Cosh<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> tanh(ExprPtr<T> operand) {
+    return std::make_unique<Tanh<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> asinh(ExprPtr<T> operand) {
+    return std::make_unique<Asinh<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> acosh(ExprPtr<T> operand) {
+    return std::make_unique<Acosh<T>>(std::move(operand));
+}
+
+template <typename T>
+ExprPtr<T> atanh(ExprPtr<T> operand) {
+    return std::make_unique<Atanh<T>>(std::move(operand));
+}
 
 } // namespace expr
 } // namespace ad

@@ -1,3 +1,288 @@
+# AutoDiff
+
+A comprehensive C++ framework for automatic differentiation supporting forward mode, reverse mode, expression optimization, and control flow differentiation.
+
+## Introduction to Automatic Differentiation
+
+### Understanding Continuous Variable Calculus Through Computation
+
+Automatic Differentiation (AD) is a computational technique that allows us to calculate exact derivatives of functions, without resorting to numerical approximations or manual derivation. Unlike symbolic differentiation (which can lead to expression explosion) or finite differences (which suffer from numerical precision issues), AD provides a way to efficiently compute derivatives with machine precision.
+
+The key insight of AD is that any function, no matter how complex, is ultimately composed of elementary operations (addition, multiplication, sin, exp, etc.) whose derivatives are known. By applying the chain rule through these operations, we can systematically compute derivatives of arbitrary functions.
+
+For example, consider calculating the derivative of f(x) = sin(x²). A manual approach would require applying the chain rule:
+- f'(x) = cos(x²) · d/dx(x²)
+- f'(x) = cos(x²) · 2x
+
+With automatic differentiation, this process happens transparently through computation:
+1. We track both the value and derivative information as we compute
+2. Each operation updates both components according to calculus rules
+3. The result includes both the function value and its derivative
+
+Our framework implements this approach through dual numbers, computational graphs, and rule-based differentiation, providing a powerful tool for scientific computing, optimization, and machine learning.
+
+## Design Principles
+
+This AD framework is built upon solid software engineering principles to ensure maintainability, extensibility, and performance. The core design follows the SOLID principles:
+
+### Single Responsibility Principle
+Each component in the framework has a clear, focused responsibility:
+- `Expression` classes represent mathematical expressions
+- `DualNumber` handles forward-mode differentiation
+- `GraphNode` manages computational graph operations
+- `Optimizer` focuses exclusively on expression optimization
+
+### Open-Closed Principle
+The framework is designed to be extended without modifying existing code:
+- New mathematical operations can be added by deriving from `BinaryOperation` or `UnaryOperation`
+- New optimizations can be implemented by extending the `ExpressionOptimizer`
+- Custom functions can be integrated through the `CustomFunctionNode` interface
+
+### Liskov Substitution Principle
+Derived types maintain the contract of their base classes:
+- All expressions follow the `Expression` interface contract
+- All operations provide consistent differentiation behavior
+- Graph nodes follow a consistent interface for forward/backward passes
+
+### Interface Segregation Principle
+Interfaces are kept focused and minimal:
+- `Expression` provides only essential methods for evaluation and differentiation
+- `GraphNode` separates forward and backward passes
+- Separate mechanisms for expressing mathematical relationships vs. computing gradients
+
+### Dependency Inversion Principle
+Higher-level modules depend on abstractions:
+- Algorithms operate on the `Expression` interface, not concrete types
+- Optimization strategies depend on abstract expression interfaces
+- Differentiation relies on abstract rule definitions
+
+## Architecture Overview
+
+```mermaid
+flowchart TD
+    subgraph "Core Components"
+        A[Expression System] --> B[Forward Mode]
+        A --> C[Reverse Mode]
+        B --> D[Elementary Functions]
+        C --> D
+        B --> E[Control Flow Constructs]
+        C --> E
+        D --> F[Optimization System]
+        E --> F
+    end
+    
+    subgraph "Optimization System"
+        F --> G[Constant Propagation]
+        F --> H[Common Subexpression Elimination]
+        F --> I[Algebraic Simplification]
+    end
+    
+    style A fill:#d0e0ff,stroke:#3080ff
+    style B fill:#d0ffe0,stroke:#30ff80
+    style C fill:#ffe0d0,stroke:#ff8030
+    style D fill:#e0d0ff,stroke:#8030ff
+    style E fill:#ffffd0,stroke:#ffff30
+    style F fill:#ffd0e0,stroke:#ff30ff
+```
+
+### Key Components
+
+1. **Expression System**: Represents mathematical expressions as a tree of operations
+2. **Differentiation Modes**:
+   - Forward Mode: Efficient for functions with few inputs and many outputs
+   - Reverse Mode: Efficient for functions with many inputs and few outputs
+3. **Elementary Functions**: Comprehensive library of mathematical operations with derivatives
+4. **Control Flow**: Handles loops and conditionals in a differentiable manner
+5. **Optimization System**: Improves performance through various optimization techniques
+
+## Implementation Highlights
+
+### Expression System
+
+```mermaid
+graph TD
+    A[Expression Tree] --> B["+"]
+    B --> C["*"]
+    B --> D["Constant: 2"]
+    C --> E["Variable: x"]
+    
+    style A fill:#f5f5f5,stroke:#333,stroke-width:2px
+    style B fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style C fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style D fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style E fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
+```
+
+This allows us to:
+- Represent complex expressions through composition
+- Perform symbolic differentiation by traversing the tree
+- Apply optimizations through tree transformations
+
+### Dual Numbers
+
+Forward-mode AD is implemented using dual numbers, which represent both value and derivative:
+
+```cpp
+template <typename T>
+class DualNumber {
+public:
+    T value;     // Function value
+    T deriv;     // Derivative information
+    
+    // Operations update both components according to calculus rules
+    DualNumber operator*(const DualNumber& other) const {
+        return {
+            value * other.value,                    // Value part
+            deriv * other.value + value * other.deriv  // Derivative part (product rule)
+        };
+    }
+};
+```
+
+### Computational Graph
+
+```mermaid
+graph TD
+    A["Output Node"] --> B["Multiplication"]
+    B --> C["Sin"]
+    B --> D["Variable: x"]
+    C --> E["Variable: x"]
+    
+    style A fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style B fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style C fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style D fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
+    style E fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
+```
+
+During backward pass:
+1. Start with gradient = 1 at output
+2. Propagate gradients backward through the graph
+3. Accumulate gradients at input nodes
+
+### Common Subexpression Elimination
+
+```mermaid
+graph TD
+    subgraph "Before Optimization"
+        A1["+"] --> B1["*"]
+        A1 --> B2["*"]
+        B1 --> C1["x+a"]
+        B2 --> C2["x+a"]
+    end
+    
+    subgraph "After Optimization"
+        A2["+"] --> B3["*"]
+        A2 --> C3["x+a"]
+        B3 --> C3
+    end
+    
+    style A1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style A2 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style B1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style B2 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style B3 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style C1 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style C2 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style C3 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+```
+
+### Control Flow Differentiation
+
+The framework supports differentiating through loops and conditionals:
+
+For loops:
+- Unroll loop during forward pass
+- Record all iterations
+- Apply chain rule through iterations during backward pass
+
+For conditionals:
+- Use smooth approximations for differentiability
+- Evaluate both branches and blend results
+- Weight gradients based on the condition value
+
+## Understanding the Development Stages
+
+The framework is implemented in three progressive stages, with each stage building upon the foundation of the previous one. This progression allows for incremental development and testing.
+
+### Stage 1 and 2 Relationship
+
+The following diagram illustrates the relationship between key components from Stage 1 and Stage 2:
+
+```mermaid
+graph LR
+    subgraph "Stage 1: Expression System"
+        A1["Expression<T>"] --> A2["evaluate()"]
+        A1 --> A3["differentiate()"]
+        A1 --> A4["Terminal Expressions"]
+        A4 --> A5["Variable<T>"]
+        A4 --> A6["Constant<T>"]
+        A1 --> A7["Operations"]
+        A7 --> A8["BinaryOp<T>"]
+        A7 --> A9["UnaryOp<T>"]
+    end
+    
+    subgraph "Stage 2: Computational Graph"
+        B1["GraphNode<T>"] --> B2["forward()"]
+        B1 --> B3["backward()"]
+        B1 --> B4["Terminal Nodes"]
+        B4 --> B5["VariableNode<T>"]
+        B4 --> B6["ConstantNode<T>"]
+        B1 --> B7["Operation Nodes"]
+        B7 --> B8["BinaryOpNode<T>"]
+        B7 --> B9["UnaryOpNode<T>"]
+    end
+    
+    A1 -- "Evolves Into" --> B1
+    A5 -- "Maps To" --> B5
+    A6 -- "Maps To" --> B6
+    A8 -- "Maps To" --> B8
+    A9 -- "Maps To" --> B9
+    
+    subgraph "Bridge"
+        C1["DualNumber<T>"]
+    end
+    
+    A1 -- "Connects via" --> C1
+    B1 -- "Connects via" --> C1
+    
+    style A1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style B1 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style C1 fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
+```
+
+### Stage 1 to Stage 2 Transition
+
+The transition from Stage 1 to Stage 2 represents a shift in paradigm:
+
+1. **Symbolic to Computational Graph**: While Stage 1 focuses on symbolic representation and manipulation of expressions (similar to mathematical formalism), Stage 2 introduces a computational graph approach that is optimized for efficient evaluation and gradient propagation.
+
+2. **Value vs. Value+Gradient**: Stage 1's Expression system primarily computes function values with differentiation as a separate operation, while Stage 2's GraphNode system incorporates both forward value computation and backward gradient computation.
+
+3. **Unidirectional vs. Bidirectional**: Stage 1 expressions flow in a single direction (evaluation), while Stage 2 nodes support bidirectional flow (forward for values, backward for gradients).
+
+### Key Mappings Between Stages
+
+The components of Stage 1 have direct analogs in Stage 2:
+
+| Stage 1 Component    | Stage 2 Equivalent    | Evolution                                       |
+|----------------------|-----------------------|------------------------------------------------|
+| `Expression<T>`      | `GraphNode<T>`        | Adds gradient tracking and backward propagation |
+| `Variable<T>`        | `VariableNode<T>`     | Adds gradient accumulation                      |
+| `Constant<T>`        | `ConstantNode<T>`     | Zero gradient behavior                          |
+| `BinaryOperation<T>` | `BinaryOperationNode<T>` | Encapsulates both forward and backward rules    |
+| `UnaryOperation<T>`  | `UnaryOperationNode<T>`  | Encapsulates both forward and backward rules    |
+
+### DualNumber as a Bridge
+
+The `DualNumber<T>` class serves as a conceptual bridge between stages:
+
+- It encapsulates the core idea of simultaneously tracking values and derivatives
+- It provides the foundation for forward-mode differentiation
+- Its principles inform the design of the computational graph in Stage 2
+
+This progression from symbolic expressions to computational graphs enables the framework to support both forward-mode and reverse-mode differentiation efficiently, while maintaining a consistent interface for users.
+
 ## Template Metaprogramming and Static Analysis
 
 The framework makes extensive use of modern C++ template metaprogramming and static analysis techniques to achieve compile-time optimizations, type safety, and improved runtime performance.
@@ -210,288 +495,7 @@ The template metaprogramming and static analysis techniques work synergistically
 3. Static analysis in Stage 1 simplifies expressions before they enter the computational graph in Stage 2
 4. The DualNumber implementation bridges both stages with consistent template patterns
 
-This integration of modern C++ template techniques with mathematical concepts creates a framework that is both mathematically rigorous and computationally efficient, providing users with a powerful tool for automatic differentiation while maintaining excellent performance characteristics.## Understanding the Development Stages
-
-The framework is implemented in three progressive stages, with each stage building upon the foundation of the previous one. This progression allows for incremental development and testing.
-
-### Stage 1 and 2 Relationship
-
-The following diagram illustrates the relationship between key components from Stage 1 and Stage 2:
-
-```mermaid
-graph LR
-    subgraph "Stage 1: Expression System"
-        A1[Expression&lt;T&gt;] --> A2[evaluate()]
-        A1 --> A3[differentiate()]
-        A1 --> A4["Terminal Expressions"]
-        A4 --> A5["Variable&lt;T&gt;"]
-        A4 --> A6["Constant&lt;T&gt;"]
-        A1 --> A7["Operations"]
-        A7 --> A8["BinaryOp&lt;T&gt;"]
-        A7 --> A9["UnaryOp&lt;T&gt;"]
-    end
-    
-    subgraph "Stage 2: Computational Graph"
-        B1[GraphNode&lt;T&gt;] --> B2[forward()]
-        B1 --> B3[backward()]
-        B1 --> B4["Terminal Nodes"]
-        B4 --> B5["VariableNode&lt;T&gt;"]
-        B4 --> B6["ConstantNode&lt;T&gt;"]
-        B1 --> B7["Operation Nodes"]
-        B7 --> B8["BinaryOpNode&lt;T&gt;"]
-        B7 --> B9["UnaryOpNode&lt;T&gt;"]
-    end
-    
-    A1 -- "Evolves Into" --> B1
-    A5 -- "Maps To" --> B5
-    A6 -- "Maps To" --> B6
-    A8 -- "Maps To" --> B8
-    A9 -- "Maps To" --> B9
-    
-    subgraph "Bridge"
-        C1["DualNumber&lt;T&gt;"]
-    end
-    
-    A1 -- "Connects via" --> C1
-    B1 -- "Connects via" --> C1
-    
-    style A1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style B1 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
-    style C1 fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
-```
-
-### Stage 1 to Stage 2 Transition
-
-The transition from Stage 1 to Stage 2 represents a shift in paradigm:
-
-1. **Symbolic to Computational Graph**: While Stage 1 focuses on symbolic representation and manipulation of expressions (similar to mathematical formalism), Stage 2 introduces a computational graph approach that is optimized for efficient evaluation and gradient propagation.
-
-2. **Value vs. Value+Gradient**: Stage 1's Expression system primarily computes function values with differentiation as a separate operation, while Stage 2's GraphNode system incorporates both forward value computation and backward gradient computation.
-
-3. **Unidirectional vs. Bidirectional**: Stage 1 expressions flow in a single direction (evaluation), while Stage 2 nodes support bidirectional flow (forward for values, backward for gradients).
-
-### Key Mappings Between Stages
-
-The components of Stage 1 have direct analogs in Stage 2:
-
-| Stage 1 Component    | Stage 2 Equivalent    | Evolution                                       |
-|----------------------|-----------------------|------------------------------------------------|
-| `Expression<T>`      | `GraphNode<T>`        | Adds gradient tracking and backward propagation |
-| `Variable<T>`        | `VariableNode<T>`     | Adds gradient accumulation                      |
-| `Constant<T>`        | `ConstantNode<T>`     | Zero gradient behavior                          |
-| `BinaryOperation<T>` | `BinaryOperationNode<T>` | Encapsulates both forward and backward rules    |
-| `UnaryOperation<T>`  | `UnaryOperationNode<T>`  | Encapsulates both forward and backward rules    |
-
-### DualNumber as a Bridge
-
-The `DualNumber<T>` class serves as a conceptual bridge between stages:
-
-- It encapsulates the core idea of simultaneously tracking values and derivatives
-- It provides the foundation for forward-mode differentiation
-- Its principles inform the design of the computational graph in Stage 2
-
-This progression from symbolic expressions to computational graphs enables the framework to support both forward-mode and reverse-mode differentiation efficiently, while maintaining a consistent interface for users.# AutoDiff
-
-A comprehensive C++ framework for automatic differentiation supporting forward mode, reverse mode, expression optimization, and control flow differentiation.
-
-## Introduction to Automatic Differentiation
-
-### Understanding Continuous Variable Calculus Through Computation
-
-Automatic Differentiation (AD) is a computational technique that allows us to calculate exact derivatives of functions, without resorting to numerical approximations or manual derivation. Unlike symbolic differentiation (which can lead to expression explosion) or finite differences (which suffer from numerical precision issues), AD provides a way to efficiently compute derivatives with machine precision.
-
-The key insight of AD is that any function, no matter how complex, is ultimately composed of elementary operations (addition, multiplication, sin, exp, etc.) whose derivatives are known. By applying the chain rule through these operations, we can systematically compute derivatives of arbitrary functions.
-
-For example, consider calculating the derivative of f(x) = sin(x²). A manual approach would require applying the chain rule:
-- f'(x) = cos(x²) · d/dx(x²)
-- f'(x) = cos(x²) · 2x
-
-With automatic differentiation, this process happens transparently through computation:
-1. We track both the value and derivative information as we compute
-2. Each operation updates both components according to calculus rules
-3. The result includes both the function value and its derivative
-
-Our framework implements this approach through dual numbers, computational graphs, and rule-based differentiation, providing a powerful tool for scientific computing, optimization, and machine learning.
-
-## Design Principles
-
-This AD framework is built upon solid software engineering principles to ensure maintainability, extensibility, and performance. The core design follows the SOLID principles:
-
-### Single Responsibility Principle
-Each component in the framework has a clear, focused responsibility:
-- `Expression` classes represent mathematical expressions
-- `DualNumber` handles forward-mode differentiation
-- `GraphNode` manages computational graph operations
-- `Optimizer` focuses exclusively on expression optimization
-
-### Open-Closed Principle
-The framework is designed to be extended without modifying existing code:
-- New mathematical operations can be added by deriving from `BinaryOperation` or `UnaryOperation`
-- New optimizations can be implemented by extending the `ExpressionOptimizer`
-- Custom functions can be integrated through the `CustomFunctionNode` interface
-
-### Liskov Substitution Principle
-Derived types maintain the contract of their base classes:
-- All expressions follow the `Expression` interface contract
-- All operations provide consistent differentiation behavior
-- Graph nodes follow a consistent interface for forward/backward passes
-
-### Interface Segregation Principle
-Interfaces are kept focused and minimal:
-- `Expression` provides only essential methods for evaluation and differentiation
-- `GraphNode` separates forward and backward passes
-- Separate mechanisms for expressing mathematical relationships vs. computing gradients
-
-### Dependency Inversion Principle
-Higher-level modules depend on abstractions:
-- Algorithms operate on the `Expression` interface, not concrete types
-- Optimization strategies depend on abstract expression interfaces
-- Differentiation relies on abstract rule definitions
-
-## Architecture Overview
-
-```mermaid
-flowchart TD
-    subgraph "Core Components"
-        A[Expression System] --> B[Forward Mode]
-        A --> C[Reverse Mode]
-        B --> D[Elementary Functions]
-        C --> D
-        B --> E[Control Flow Constructs]
-        C --> E
-        D --> F[Optimization System]
-        E --> F
-    end
-    
-    subgraph "Optimization System"
-        F --> G[Constant Propagation]
-        F --> H[Common Subexpression Elimination]
-        F --> I[Algebraic Simplification]
-    end
-    
-    style A fill:#d0e0ff,stroke:#3080ff
-    style B fill:#d0ffe0,stroke:#30ff80
-    style C fill:#ffe0d0,stroke:#ff8030
-    style D fill:#e0d0ff,stroke:#8030ff
-    style E fill:#ffffd0,stroke:#ffff30
-    style F fill:#ffd0e0,stroke:#ff30ff
-```
-
-### Key Components
-
-1. **Expression System**: Represents mathematical expressions as a tree of operations
-2. **Differentiation Modes**:
-   - Forward Mode: Efficient for functions with few inputs and many outputs
-   - Reverse Mode: Efficient for functions with many inputs and few outputs
-3. **Elementary Functions**: Comprehensive library of mathematical operations with derivatives
-4. **Control Flow**: Handles loops and conditionals in a differentiable manner
-5. **Optimization System**: Improves performance through various optimization techniques
-
-## Implementation Highlights
-
-### Expression System
-
-```mermaid
-graph TD
-    A[Expression Tree] --> B["+"]
-    B --> C["*"]
-    B --> D["Constant: 2"]
-    C --> E["Variable: x"]
-    
-    style A fill:#f5f5f5,stroke:#333,stroke-width:2px
-    style B fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style C fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style D fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
-    style E fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
-```
-
-This allows us to:
-- Represent complex expressions through composition
-- Perform symbolic differentiation by traversing the tree
-- Apply optimizations through tree transformations
-
-### Dual Numbers
-
-Forward-mode AD is implemented using dual numbers, which represent both value and derivative:
-
-```cpp
-template <typename T>
-class DualNumber {
-public:
-    T value;     // Function value
-    T deriv;     // Derivative information
-    
-    // Operations update both components according to calculus rules
-    DualNumber operator*(const DualNumber& other) const {
-        return {
-            value * other.value,                    // Value part
-            deriv * other.value + value * other.deriv  // Derivative part (product rule)
-        };
-    }
-};
-```
-
-### Computational Graph
-
-```mermaid
-graph TD
-    A["Output Node"] --> B["Multiplication"]
-    B --> C["Sin"]
-    B --> D["Variable: x"]
-    C --> E["Variable: x"]
-    
-    style A fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
-    style B fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style C fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style D fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
-    style E fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
-```
-
-During backward pass:
-1. Start with gradient = 1 at output
-2. Propagate gradients backward through the graph
-3. Accumulate gradients at input nodes
-
-### Common Subexpression Elimination
-
-```mermaid
-graph TD
-    subgraph "Before Optimization"
-        A1["+"] --> B1["*"]
-        A1 --> B2["*"]
-        B1 --> C1["x+a"]
-        B2 --> C2["x+a"]
-    end
-    
-    subgraph "After Optimization"
-        A2["+"] --> B3["*"]
-        A2 --> C3["x+a"]
-        B3 --> C3
-    end
-    
-    style A1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style A2 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style B1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style B2 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style B3 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style C1 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
-    style C2 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
-    style C3 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
-```
-
-### Control Flow Differentiation
-
-The framework supports differentiating through loops and conditionals:
-
-For loops:
-- Unroll loop during forward pass
-- Record all iterations
-- Apply chain rule through iterations during backward pass
-
-For conditionals:
-- Use smooth approximations for differentiability
-- Evaluate both branches and blend results
-- Weight gradients based on the condition value
+This integration of modern C++ template techniques with mathematical concepts creates a framework that is both mathematically rigorous and computationally efficient, providing users with a powerful tool for automatic differentiation while maintaining excellent performance characteristics.
 
 ## Performance Considerations
 

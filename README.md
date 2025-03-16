@@ -260,7 +260,7 @@ The following diagram illustrates the relationship between key components from S
 ```mermaid
 flowchart LR
     %% Stage 1 Components
-    subgraph "Stage 1: Expression System"
+    subgraph "S1: Expression System"
         A1("Expression<T>")
         A2("evaluate()")
         A3("differentiate()")
@@ -282,7 +282,7 @@ flowchart LR
     end
     
     %% Stage 2 Components
-    subgraph "Stage 2: Computational Graph"
+    subgraph "S2: Computational Graph"
         B1("GraphNode<T>")
         B2("forward()")
         B3("backward()")

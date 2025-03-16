@@ -60,28 +60,46 @@ Higher-level modules depend on abstractions:
 
 ```mermaid
 flowchart TD
-    A["Core: Expression System"] --> B["Forward Mode"]
-    A --> C["Reverse Mode"]
-    B --> D["Elementary Functions"]
-    C --> D
-    B --> E["Control Flow Constructs"]
-    C --> E
-    D --> F["Optimization System"]
-    E --> F
+    %% Core Components
+    subgraph "Core Components"
+        A("fa:fa-project-diagram Expression System")
+        B("fa:fa-arrow-right Forward Mode")
+        C("fa:fa-arrow-left Reverse Mode")
+        D("fa:fa-calculator Elementary Functions")
+        E("fa:fa-code-branch Control Flow Constructs")
+        F("fa:fa-rocket Optimization System")
+        
+        A --> B
+        A --> C
+        B --> D
+        C --> D
+        B --> E
+        C --> E
+        D --> F
+        E --> F
+    end
     
-    F --> G["Constant Propagation"]
-    F --> H["Common Subexpression Elimination"]
-    F --> I["Algebraic Simplification"]
+    %% Optimization System
+    subgraph "Optimization System"
+        G("fa:fa-compress-arrows-alt Constant Propagation")
+        H("fa:fa-clone Common Subexpression Elimination")
+        I("fa:fa-magic Algebraic Simplification")
+        
+        F --> G
+        F --> H
+        F --> I
+    end
     
-    style A fill:#78a3ff,stroke:#3060c0
-    style B fill:#98e5a7,stroke:#30a050
-    style C fill:#98e5a7,stroke:#30a050
-    style D fill:#b991ff,stroke:#7030c0
-    style E fill:#ffed7a,stroke:#c0a030
-    style F fill:#ff9d73,stroke:#d04000
-    style G fill:#ff9d73,stroke:#d04000
-    style H fill:#ff9d73,stroke:#d04000
-    style I fill:#ff9d73,stroke:#d04000
+    %% Styling
+    style A fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style B fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
+    style C fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style D fill:#e0d0ff,stroke:#8030ff,stroke-width:2px
+    style E fill:#ffffd0,stroke:#ffff30,stroke-width:2px
+    style F fill:#ffd0e0,stroke:#ff30ff,stroke-width:2px
+    style G fill:#f0f0f0,stroke:#555555,stroke-width:1px
+    style H fill:#f0f0f0,stroke:#555555,stroke-width:1px
+    style I fill:#f0f0f0,stroke:#555555,stroke-width:1px
 ```
 
 ### Key Components
@@ -99,17 +117,26 @@ flowchart TD
 ### Expression System
 
 ```mermaid
-flowchart TD
-    A["Expression Tree"] --> B["+"]
-    B --> C["*"]
-    B --> D["Constant: 2"]
-    C --> E["Variable: x"]
+graph TD
+    %% Nodes
+    A("fa:fa-project-diagram Expression Tree")
+    B("fa:fa-plus +")
+    C("fa:fa-times *")
+    D("fa:fa-hashtag Constant: 2")
+    E("fa:fa-superscript Variable: x")
     
-    style A fill:#f5f5f5,stroke:#333
-    style B fill:#78a3ff,stroke:#3060c0
-    style C fill:#78a3ff,stroke:#3060c0
-    style D fill:#ffb07c,stroke:#e06030
-    style E fill:#98e5a7,stroke:#30a050
+    %% Connections
+    A --> B
+    B --> C
+    B --> D
+    C --> E
+    
+    %% Styling
+    style A fill:#f5f5f5,stroke:#333,stroke-width:2px
+    style B fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style C fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style D fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style E fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
 ```
 
 This allows us to:
@@ -141,17 +168,26 @@ public:
 ### Computational Graph
 
 ```mermaid
-flowchart TD
-    A["Output Node"] --> B["Multiplication"]
-    B --> C["Sin"]
-    B --> D["Variable: x"]
-    C --> E["Variable: x"]
+graph TD
+    %% Nodes
+    A("fa:fa-chart-line Output Node")
+    B("fa:fa-times Multiplication")
+    C("fa:fa-wave-square Sin")
+    D("fa:fa-superscript Variable: x")
+    E("fa:fa-superscript Variable: x")
     
-    style A fill:#ff9d73,stroke:#d04000
-    style B fill:#78a3ff,stroke:#3060c0
-    style C fill:#78a3ff,stroke:#3060c0
-    style D fill:#98e5a7,stroke:#30a050
-    style E fill:#98e5a7,stroke:#30a050
+    %% Connections
+    A --> B
+    B --> C
+    B --> D
+    C --> E
+    
+    %% Styling
+    style A fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style B fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style C fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style D fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
+    style E fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
 ```
 
 During backward pass:
@@ -162,27 +198,41 @@ During backward pass:
 ### Common Subexpression Elimination
 
 ```mermaid
-flowchart LR
-    subgraph "Before"
-        A1["+"] --> B1["*"]
-        A1 --> B2["*"]
-        B1 --> C1["x+a"]
-        B1 --> D1["..."]
-        B2 --> C2["x+a"]
-        B2 --> D2["..."]
+graph TD
+    %% Before Optimization
+    subgraph "Before Optimization"
+        A1("fa:fa-plus +")
+        B1("fa:fa-times *")
+        B2("fa:fa-times *")
+        C1("fa:fa-code x+a")
+        C2("fa:fa-code x+a")
+        
+        A1 --> B1
+        A1 --> B2
+        B1 --> C1
+        B2 --> C2
     end
     
-    subgraph "After"
-        A2["+"] --> B3["*"]
-        A2 --> B4["*"]
-        B3 --> C3["x+a"]
-        B3 --> D3["..."]
-        B4 --> C3
-        B4 --> D4["..."]
+    %% After Optimization
+    subgraph "After Optimization"
+        A2("fa:fa-plus +")
+        B3("fa:fa-times *")
+        C3("fa:fa-code x+a")
+        
+        A2 --> B3
+        A2 --> C3
+        B3 --> C3
     end
     
-    style A1,A2,B1,B2,B3,B4 fill:#78a3ff,stroke:#3060c0
-    style C1,C2,C3,D1,D2,D3,D4 fill:#ffb07c,stroke:#e06030
+    %% Styling
+    style A1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style A2 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style B1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style B2 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style B3 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style C1 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style C2 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style C3 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
 ```
 
 ### Control Flow Differentiation
@@ -209,44 +259,69 @@ The following diagram illustrates the relationship between key components from S
 
 ```mermaid
 flowchart LR
-    subgraph "Stage1"
-        A1["Expression"] --> A2["evaluate()"]
-        A1 --> A3["differentiate()"]
-        A1 --> A4["Terminal Expressions"]
-        A4 --> A5["Variable"]
-        A4 --> A6["Constant"]
-        A1 --> A7["Operations"]
-        A7 --> A8["BinaryOp"]
-        A7 --> A9["UnaryOp"]
+    %% Stage 1 Components
+    subgraph "Stage 1: Expression System"
+        A1("Expression<T>")
+        A2("evaluate()")
+        A3("differentiate()")
+        A4("Terminal Expressions")
+        A5("Variable<T>")
+        A6("Constant<T>")
+        A7("Operations")
+        A8("BinaryOp<T>")
+        A9("UnaryOp<T>")
+        
+        A1 --> A2
+        A1 --> A3
+        A1 --> A4
+        A4 --> A5
+        A4 --> A6
+        A1 --> A7
+        A7 --> A8
+        A7 --> A9
     end
     
-    subgraph "Stage2"
-        B1["GraphNode"] --> B2["forward()"]
-        B1 --> B3["backward()"]
-        B1 --> B4["Terminal Nodes"]
-        B4 --> B5["VariableNode"]
-        B4 --> B6["ConstantNode"]
-        B1 --> B7["Operation Nodes"]
-        B7 --> B8["BinaryOpNode"]
-        B7 --> B9["UnaryOpNode"]
+    %% Stage 2 Components
+    subgraph "Stage 2: Computational Graph"
+        B1("GraphNode<T>")
+        B2("forward()")
+        B3("backward()")
+        B4("Terminal Nodes")
+        B5("VariableNode<T>")
+        B6("ConstantNode<T>")
+        B7("Operation Nodes")
+        B8("BinaryOpNode<T>")
+        B9("UnaryOpNode<T>")
+        
+        B1 --> B2
+        B1 --> B3
+        B1 --> B4
+        B4 --> B5
+        B4 --> B6
+        B1 --> B7
+        B7 --> B8
+        B7 --> B9
     end
     
+    %% Connections between stages
     A1 -- "Evolves Into" --> B1
     A5 -- "Maps To" --> B5
     A6 -- "Maps To" --> B6
     A8 -- "Maps To" --> B8
     A9 -- "Maps To" --> B9
     
+    %% Bridge component
     subgraph "Bridge"
-        C1["DualNumber"]
+        C1("DualNumber<T>")
     end
     
     A1 -- "Connects via" --> C1
     B1 -- "Connects via" --> C1
     
-    style A1,A2,A3,A4,A5,A6,A7,A8,A9 fill:#78a3ff,stroke:#3060c0
-    style B1,B2,B3,B4,B5,B6,B7,B8,B9 fill:#ff9d73,stroke:#d04000
-    style C1 fill:#98e5a7,stroke:#30a050
+    %% Styling
+    style A1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style B1 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style C1 fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
 ```
 
 ### Stage 1 to Stage 2 Transition

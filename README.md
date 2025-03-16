@@ -60,21 +60,21 @@ Higher-level modules depend on abstractions:
 
 ```mermaid
 flowchart TD
-    subgraph "Core Components"
-        A[Expression System] --> B[Forward Mode]
-        A --> C[Reverse Mode]
-        B --> D[Elementary Functions]
+    subgraph "Core"
+        A("Expression System") --> B("Forward Mode")
+        A --> C("Reverse Mode")
+        B --> D("Elementary Functions")
         C --> D
-        B --> E[Control Flow Constructs]
+        B --> E("Control Flow Constructs")
         C --> E
-        D --> F[Optimization System]
+        D --> F("Optimization System")
         E --> F
     end
     
-    subgraph "Optimization System"
-        F --> G[Constant Propagation]
-        F --> H[Common Subexpression Elimination]
-        F --> I[Algebraic Simplification]
+    subgraph "Optimization"
+        F --> G("Constant Propagation")
+        F --> H("Common Subexpression Elimination")
+        F --> I("Algebraic Simplification")
     end
     
     classDef core fill:#78a3ff,stroke:#3060c0,stroke-width:2px,color:#fff
@@ -105,11 +105,11 @@ flowchart TD
 ### Expression System
 
 ```mermaid
-graph TD
-    A["Expression Tree"] --> B["+"]
-    B --> C["*"]
-    B --> D["Constant: 2"]
-    C --> E["Variable: x"]
+flowchart TD
+    A("Expression Tree") --> B("+")
+    B --> C("*")
+    B --> D("Constant: 2")
+    C --> E("Variable: x")
     
     classDef root fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#333
     classDef operation fill:#78a3ff,stroke:#3060c0,stroke-width:2px,color:#fff
@@ -151,11 +151,11 @@ public:
 ### Computational Graph
 
 ```mermaid
-graph TD
-    A["Output Node"] --> B["Multiplication"]
-    B --> C["Sin"]
-    B --> D["Variable: x"]
-    C --> E["Variable: x"]
+flowchart TD
+    A("Output Node") --> B("Multiplication")
+    B --> C("Sin")
+    B --> D("Variable: x")
+    C --> E("Variable: x")
     
     classDef output fill:#ff9d73,stroke:#d04000,stroke-width:2px,color:#fff
     classDef operation fill:#78a3ff,stroke:#3060c0,stroke-width:2px,color:#fff
@@ -174,17 +174,17 @@ During backward pass:
 ### Common Subexpression Elimination
 
 ```mermaid
-graph TD
-    subgraph "Before Optimization"
-        A1["+"] --> B1["*"]
-        A1 --> B2["*"]
-        B1 --> C1["x+a"]
-        B2 --> C2["x+a"]
+flowchart TD
+    subgraph "Before"
+        A1("+") --> B1("*")
+        A1 --> B2("*")
+        B1 --> C1("x+a")
+        B2 --> C2("x+a")
     end
     
-    subgraph "After Optimization"
-        A2["+"] --> B3["*"]
-        A2 --> C3["x+a"]
+    subgraph "After"
+        A2("+") --> B3("*")
+        A2 --> C3("x+a")
         B3 --> C3
     end
     
@@ -218,27 +218,27 @@ The framework is implemented in three progressive stages, with each stage buildi
 The following diagram illustrates the relationship between key components from Stage 1 and Stage 2:
 
 ```mermaid
-graph LR
-    subgraph "Stage 1: Expression System"
-        A1["Expression<T>"] --> A2["evaluate()"]
-        A1 --> A3["differentiate()"]
-        A1 --> A4["Terminal Expressions"]
-        A4 --> A5["Variable<T>"]
-        A4 --> A6["Constant<T>"]
-        A1 --> A7["Operations"]
-        A7 --> A8["BinaryOp<T>"]
-        A7 --> A9["UnaryOp<T>"]
+flowchart LR
+    subgraph "Stage1"
+        A1("Expression") --> A2("evaluate()")
+        A1 --> A3("differentiate()")
+        A1 --> A4("Terminal Expressions")
+        A4 --> A5("Variable")
+        A4 --> A6("Constant")
+        A1 --> A7("Operations")
+        A7 --> A8("BinaryOp")
+        A7 --> A9("UnaryOp")
     end
     
-    subgraph "Stage 2: Computational Graph"
-        B1["GraphNode<T>"] --> B2["forward()"]
-        B1 --> B3["backward()"]
-        B1 --> B4["Terminal Nodes"]
-        B4 --> B5["VariableNode<T>"]
-        B4 --> B6["ConstantNode<T>"]
-        B1 --> B7["Operation Nodes"]
-        B7 --> B8["BinaryOpNode<T>"]
-        B7 --> B9["UnaryOpNode<T>"]
+    subgraph "Stage2"
+        B1("GraphNode") --> B2("forward()")
+        B1 --> B3("backward()")
+        B1 --> B4("Terminal Nodes")
+        B4 --> B5("VariableNode")
+        B4 --> B6("ConstantNode")
+        B1 --> B7("Operation Nodes")
+        B7 --> B8("BinaryOpNode")
+        B7 --> B9("UnaryOpNode")
     end
     
     A1 -- "Evolves Into" --> B1
@@ -248,7 +248,7 @@ graph LR
     A9 -- "Maps To" --> B9
     
     subgraph "Bridge"
-        C1["DualNumber<T>"]
+        C1("DualNumber")
     end
     
     A1 -- "Connects via" --> C1

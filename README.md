@@ -60,34 +60,28 @@ Higher-level modules depend on abstractions:
 
 ```mermaid
 flowchart TD
-    subgraph "Core"
-        A("Expression System") --> B("Forward Mode")
-        A --> C("Reverse Mode")
-        B --> D("Elementary Functions")
-        C --> D
-        B --> E("Control Flow Constructs")
-        C --> E
-        D --> F("Optimization System")
-        E --> F
-    end
+    A["Core: Expression System"] --> B["Forward Mode"]
+    A --> C["Reverse Mode"]
+    B --> D["Elementary Functions"]
+    C --> D
+    B --> E["Control Flow Constructs"]
+    C --> E
+    D --> F["Optimization System"]
+    E --> F
     
-    subgraph "Optimization"
-        F --> G("Constant Propagation")
-        F --> H("Common Subexpression Elimination")
-        F --> I("Algebraic Simplification")
-    end
+    F --> G["Constant Propagation"]
+    F --> H["Common Subexpression Elimination"]
+    F --> I["Algebraic Simplification"]
     
-    classDef core fill:#78a3ff,stroke:#3060c0,stroke-width:2px,color:#fff
-    classDef mode fill:#98e5a7,stroke:#30a050,stroke-width:2px,color:#fff
-    classDef feature fill:#b991ff,stroke:#7030c0,stroke-width:2px,color:#fff
-    classDef optimization fill:#ff9d73,stroke:#d04000,stroke-width:2px,color:#fff
-    classDef control fill:#ffed7a,stroke:#c0a030,stroke-width:2px,color:#333
-    
-    class A core
-    class B,C mode
-    class D feature
-    class E control
-    class F,G,H,I optimization
+    style A fill:#78a3ff,stroke:#3060c0
+    style B fill:#98e5a7,stroke:#30a050
+    style C fill:#98e5a7,stroke:#30a050
+    style D fill:#b991ff,stroke:#7030c0
+    style E fill:#ffed7a,stroke:#c0a030
+    style F fill:#ff9d73,stroke:#d04000
+    style G fill:#ff9d73,stroke:#d04000
+    style H fill:#ff9d73,stroke:#d04000
+    style I fill:#ff9d73,stroke:#d04000
 ```
 
 ### Key Components
@@ -106,20 +100,16 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A("Expression Tree") --> B("+")
-    B --> C("*")
-    B --> D("Constant: 2")
-    C --> E("Variable: x")
+    A["Expression Tree"] --> B["+"]
+    B --> C["*"]
+    B --> D["Constant: 2"]
+    C --> E["Variable: x"]
     
-    classDef root fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#333
-    classDef operation fill:#78a3ff,stroke:#3060c0,stroke-width:2px,color:#fff
-    classDef constant fill:#ffb07c,stroke:#e06030,stroke-width:2px,color:#fff
-    classDef variable fill:#98e5a7,stroke:#30a050,stroke-width:2px,color:#fff
-    
-    class A root
-    class B,C operation
-    class D constant
-    class E variable
+    style A fill:#f5f5f5,stroke:#333
+    style B fill:#78a3ff,stroke:#3060c0
+    style C fill:#78a3ff,stroke:#3060c0
+    style D fill:#ffb07c,stroke:#e06030
+    style E fill:#98e5a7,stroke:#30a050
 ```
 
 This allows us to:
@@ -152,18 +142,16 @@ public:
 
 ```mermaid
 flowchart TD
-    A("Output Node") --> B("Multiplication")
-    B --> C("Sin")
-    B --> D("Variable: x")
-    C --> E("Variable: x")
+    A["Output Node"] --> B["Multiplication"]
+    B --> C["Sin"]
+    B --> D["Variable: x"]
+    C --> E["Variable: x"]
     
-    classDef output fill:#ff9d73,stroke:#d04000,stroke-width:2px,color:#fff
-    classDef operation fill:#78a3ff,stroke:#3060c0,stroke-width:2px,color:#fff
-    classDef variable fill:#98e5a7,stroke:#30a050,stroke-width:2px,color:#fff
-    
-    class A output
-    class B,C operation
-    class D,E variable
+    style A fill:#ff9d73,stroke:#d04000
+    style B fill:#78a3ff,stroke:#3060c0
+    style C fill:#78a3ff,stroke:#3060c0
+    style D fill:#98e5a7,stroke:#30a050
+    style E fill:#98e5a7,stroke:#30a050
 ```
 
 During backward pass:
@@ -174,25 +162,27 @@ During backward pass:
 ### Common Subexpression Elimination
 
 ```mermaid
-flowchart TD
+flowchart LR
     subgraph "Before"
-        A1("+") --> B1("*")
-        A1 --> B2("*")
-        B1 --> C1("x+a")
-        B2 --> C2("x+a")
+        A1["+"] --> B1["*"]
+        A1 --> B2["*"]
+        B1 --> C1["x+a"]
+        B1 --> D1["..."]
+        B2 --> C2["x+a"]
+        B2 --> D2["..."]
     end
     
     subgraph "After"
-        A2("+") --> B3("*")
-        A2 --> C3("x+a")
-        B3 --> C3
+        A2["+"] --> B3["*"]
+        A2 --> B4["*"]
+        B3 --> C3["x+a"]
+        B3 --> D3["..."]
+        B4 --> C3
+        B4 --> D4["..."]
     end
     
-    classDef operation fill:#78a3ff,stroke:#3060c0,stroke-width:2px,color:#fff
-    classDef expression fill:#ffb07c,stroke:#e06030,stroke-width:2px,color:#fff
-    
-    class A1,A2,B1,B2,B3 operation
-    class C1,C2,C3 expression
+    style A1,A2,B1,B2,B3,B4 fill:#78a3ff,stroke:#3060c0
+    style C1,C2,C3,D1,D2,D3,D4 fill:#ffb07c,stroke:#e06030
 ```
 
 ### Control Flow Differentiation
@@ -220,25 +210,25 @@ The following diagram illustrates the relationship between key components from S
 ```mermaid
 flowchart LR
     subgraph "Stage1"
-        A1("Expression") --> A2("evaluate()")
-        A1 --> A3("differentiate()")
-        A1 --> A4("Terminal Expressions")
-        A4 --> A5("Variable")
-        A4 --> A6("Constant")
-        A1 --> A7("Operations")
-        A7 --> A8("BinaryOp")
-        A7 --> A9("UnaryOp")
+        A1["Expression"] --> A2["evaluate()"]
+        A1 --> A3["differentiate()"]
+        A1 --> A4["Terminal Expressions"]
+        A4 --> A5["Variable"]
+        A4 --> A6["Constant"]
+        A1 --> A7["Operations"]
+        A7 --> A8["BinaryOp"]
+        A7 --> A9["UnaryOp"]
     end
     
     subgraph "Stage2"
-        B1("GraphNode") --> B2("forward()")
-        B1 --> B3("backward()")
-        B1 --> B4("Terminal Nodes")
-        B4 --> B5("VariableNode")
-        B4 --> B6("ConstantNode")
-        B1 --> B7("Operation Nodes")
-        B7 --> B8("BinaryOpNode")
-        B7 --> B9("UnaryOpNode")
+        B1["GraphNode"] --> B2["forward()"]
+        B1 --> B3["backward()"]
+        B1 --> B4["Terminal Nodes"]
+        B4 --> B5["VariableNode"]
+        B4 --> B6["ConstantNode"]
+        B1 --> B7["Operation Nodes"]
+        B7 --> B8["BinaryOpNode"]
+        B7 --> B9["UnaryOpNode"]
     end
     
     A1 -- "Evolves Into" --> B1
@@ -248,19 +238,15 @@ flowchart LR
     A9 -- "Maps To" --> B9
     
     subgraph "Bridge"
-        C1("DualNumber")
+        C1["DualNumber"]
     end
     
     A1 -- "Connects via" --> C1
     B1 -- "Connects via" --> C1
     
-    classDef stage1 fill:#78a3ff,stroke:#3060c0,stroke-width:2px,color:#fff
-    classDef stage2 fill:#ff9d73,stroke:#d04000,stroke-width:2px,color:#fff
-    classDef bridge fill:#98e5a7,stroke:#30a050,stroke-width:2px,color:#fff
-    
-    class A1,A2,A3,A4,A5,A6,A7,A8,A9 stage1
-    class B1,B2,B3,B4,B5,B6,B7,B8,B9 stage2
-    class C1 bridge
+    style A1,A2,A3,A4,A5,A6,A7,A8,A9 fill:#78a3ff,stroke:#3060c0
+    style B1,B2,B3,B4,B5,B6,B7,B8,B9 fill:#ff9d73,stroke:#d04000
+    style C1 fill:#98e5a7,stroke:#30a050
 ```
 
 ### Stage 1 to Stage 2 Transition

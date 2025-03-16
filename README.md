@@ -588,285 +588,885 @@ The framework is designed for extensibility:
 - **Hardware Acceleration**: SIMD and parallelization support
 - **Integration APIs**: Connect with external libraries and frameworks
 
-## Build Instructions
+## Test Results
 
-### Prerequisites
-```bash
-sudo apt update
-sudo apt install gcc-14 g++-14 cmake
-```
+### Stage 2 Tests
 
-### Build Commands
-```bash
-mkdir build && cd build
-
-# Configure (with debug symbols)
-cmake -DCMAKE_BUILD_TYPE=Debug ..
-
-# Build all targets
-make -j$(nproc)
-
-# Build specific targets
-make example1
-make autodiff_test
-
-# Run tests
-ctest --output-on-failure
-
-# Install system-wide (optional)
-sudo make install
-```
-
-### Key Options
-| CMake Option          | Default | Description                  |
-|-----------------------|---------|------------------------------|
-| BUILD_TESTING         | OFF     | Enable test builds           |
-| BUILD_EXAMPLES        | ON      | Build example programs       |
-
-## Getting Started
-
-### Basic Example
-
-```cpp
-#include "AutoDiff/expression.h"
-#include "AutoDiff/elementary_functions.h"
-
-using namespace ad::expr;
-
-int main() {
-    // Create variables
-    auto x = std::make_unique<Variable<double>>("x", 2.0);
-    
-    // Build expression: sin(x^2)
-    auto expr = std::make_unique<Sin<double>>(
-        std::make_unique<Pow<double>>(
-            x->clone(),
-            std::make_unique<Constant<double>>(2)
-        )
-    );
-    
-    // Evaluate expression
-    double result = expr->evaluate();  // sin(2^2) = sin(4)
-    
-    // Compute derivative
-    auto derivative = expr->differentiate("x");
-    double deriv_result = derivative->evaluate();  // cos(4) * 2*2 = cos(4) * 4
-    
-    return 0;
-}
-```
-
-### Forward Mode Example
-
-```cpp
-#include "AutoDiff/forward_mode.h"
-#include <iostream>
-
-using namespace ad::forward;
-
-int main() {
-    ForwardMode<double> ad;
-    
-    // Create a variable with derivative = 1
-    auto x = ad.variable(2.0);
-    
-    // Compute sin(x^2) and its derivative
-    auto x_squared = x * x;
-    auto result = sin(x_squared);
-    
-    std::cout << "f(2) = " << result.value << std::endl;
-    std::cout << "f'(2) = " << result.deriv << std::endl;
-    
-    return 0;
-}
-```
-
-### Reverse Mode Example
-
-```cpp
-#include "AutoDiff/reverse_mode.h"
-#include "AutoDiff/computational_graph.h"
-#include <iostream>
-
-using namespace ad::reverse;
-using namespace ad::graph;
-
-int main() {
-    ReverseMode<double> ad;
-    
-    // Create variables
-    auto x = ad.add_variable("x", 2.0);
-    
-    // Build computation graph
-    auto x_squared = multiply(x, x);
-    auto result = sin(x_squared);
-    
-    // Compute gradients
-    auto gradients = ad.compute_gradients(result);
-    
-    std::cout << "f(2) = " << result->get_value() << std::endl;
-    std::cout << "df/dx = " << gradients["x"] << std::endl;
-    
-    return 0;
-}
-```
-
-### Optimization Example
-
-```cpp
-#include "AutoDiff/expression.h"
-#include "AutoDiff/optimizer.h"
-#include <iostream>
-
-using namespace ad::expr;
-using namespace ad::optimizer;
-
-int main() {
-    // Create variables
-    auto x = std::make_unique<Variable<double>>("x", 2.0);
-    auto y = std::make_unique<Variable<double>>("y", 3.0);
-    
-    // Build expression with common subexpressions
-    auto subexpr = x->clone() + y->clone();
-    auto expr = (subexpr->clone() * subexpr->clone()) + subexpr->clone();
-    
-    // Optimize the expression
-    ExpressionOptimizer<double> optimizer;
-    auto optimized = optimizer.optimize(std::move(expr));
-    
-    std::cout << "Original value: " << expr->evaluate() << std::endl;
-    std::cout << "Optimized value: " << optimized->evaluate() << std::endl;
-    std::cout << "Optimization metrics:\n" << optimizer.get_metrics_report() << std::endl;
-    
-    return 0;
-}
-```
-
-## Author and Maintainer
-
-**Ruben D. Guerrero, PhD**  
-Email: ruben.guerrero@neurotechnet.com
-
-## License
-
-This project is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
+The framework has been thoroughly tested to ensure proper functionality. Below are the Stage 2 test results:
 
 ```
-BSD 3-Clause License
+(base) 192:test ruben$ ./stage2_tests
+Running main() from /Users/ruben/Research/AutoDiff/build/_deps/googletest-src/googletest/src/gtest_main.cc
+[==========] Running 36 tests from 6 test suites.
+[----------] Global test environment set-up.
+[----------] 5 tests from ComputationalGraphTest
+[ RUN      ] ComputationalGraphTest.BasicForwardPass
+[       OK ] ComputationalGraphTest.BasicForwardPass (0 ms)
+[ RUN      ] ComputationalGraphTest.BackwardGradientAccumulation
+[       OK ] ComputationalGraphTest.BackwardGradientAccumulation (0 ms)
+[ RUN      ] ComputationalGraphTest.MultiDependentNodes
+[       OK ] ComputationalGraphTest.MultiDependentNodes (0 ms)
+[ RUN      ] ComputationalGraphTest.SubtractionGradient
+[       OK ] ComputationalGraphTest.SubtractionGradient (0 ms)
+[ RUN      ] ComputationalGraphTest.DivisionGradient
+[       OK ] ComputationalGraphTest.DivisionGradient (0 ms)
+[----------] 5 tests from ComputationalGraphTest (0 ms total)
 
-Copyright (c) 2025, Ruben D. Guerrero
-All rights reserved.
+[----------] 8 tests from ReverseModeTest
+[ RUN      ] ReverseModeTest.SingleVariableGradient
+[       OK ] ReverseModeTest.SingleVariableGradient (0 ms)
+[ RUN      ] ReverseModeTest.BasicOperations
+[       OK ] ReverseModeTest.BasicOperations (0 ms)
+[ RUN      ] ReverseModeTest.ElementaryFunctions
+[       OK ] ReverseModeTest.ElementaryFunctions (0 ms)
+[ RUN      ] ReverseModeTest.CompositeFunction
+[       OK ] ReverseModeTest.CompositeFunction (0 ms)
+[ RUN      ] ReverseModeTest.MultipleVariables
+[       OK ] ReverseModeTest.MultipleVariables (0 ms)
+[ RUN      ] ReverseModeTest.GradientAccumulation
+[       OK ] ReverseModeTest.GradientAccumulation (0 ms)
+[ RUN      ] ReverseModeTest.SetVariable
+[       OK ] ReverseModeTest.SetVariable (0 ms)
+[ RUN      ] ReverseModeTest.ChainedOperations
+[       OK ] ReverseModeTest.ChainedOperations (0 ms)
+[----------] 8 tests from ReverseModeTest (0 ms total)
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+[----------] 2 tests from ControlFlowTest
+[ RUN      ] ControlFlowTest.SimpleLoopDifferentiation
+[       OK ] ControlFlowTest.SimpleLoopDifferentiation (0 ms)
+[ RUN      ] ControlFlowTest.ConditionalBranchGradient
+[       OK ] ControlFlowTest.ConditionalBranchGradient (0 ms)
+[----------] 2 tests from ControlFlowTest (0 ms total)
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
+[----------] 9 tests from CustomFunctionTest
+[ RUN      ] CustomFunctionTest.BasicFunction
+[       OK ] CustomFunctionTest.BasicFunction (0 ms)
+[ RUN      ] CustomFunctionTest.SingleInput
+[       OK ] CustomFunctionTest.SingleInput (0 ms)
+[ RUN      ] CustomFunctionTest.MultipleInputs
+[       OK ] CustomFunctionTest.MultipleInputs (0 ms)
+[ RUN      ] CustomFunctionTest.Composition
+[       OK ] CustomFunctionTest.Composition (0 ms)
+[ RUN      ] CustomFunctionTest.GradientAccumulation
+[       OK ] CustomFunctionTest.GradientAccumulation (0 ms)
+[ RUN      ] CustomFunctionTest.NumericalGradientCheck
+[       OK ] CustomFunctionTest.NumericalGradientCheck (1 ms)
+[ RUN      ] CustomFunctionTest.VariableReuse
+[       OK ] CustomFunctionTest.VariableReuse (0 ms)
+[ RUN      ] CustomFunctionTest.EmptyInputs
+[       OK ] CustomFunctionTest.EmptyInputs (0 ms)
+[ RUN      ] CustomFunctionTest.MismatchedGradients
+[       OK ] CustomFunctionTest.MismatchedGradients (0 ms)
+[----------] 9 tests from CustomFunctionTest (1 ms total)
 
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+[----------] 5 tests from OptimizerTest
+[ RUN      ] OptimizerTest.ConstantPropagationAndFolding
+[       OK ] OptimizerTest.ConstantPropagationAndFolding (0 ms)
+[ RUN      ] OptimizerTest.CommonSubexpressionElimination
+[       OK ] OptimizerTest.CommonSubexpressionElimination (0 ms)
+[ RUN      ] OptimizerTest.AlgebraicSimplifications
+[       OK ] OptimizerTest.AlgebraicSimplifications (0 ms)
+[ RUN      ] OptimizerTest.PerformanceMonitoring
+[       OK ] OptimizerTest.PerformanceMonitoring (0 ms)
+[ RUN      ] OptimizerTest.ErrorHandlingInOptimizer
+[       OK ] OptimizerTest.ErrorHandlingInOptimizer (1 ms)
+[----------] 5 tests from OptimizerTest (1 ms total)
 
-3. Neither the name of the copyright holder nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
+[----------] 7 tests from ForwardModeTest
+[ RUN      ] ForwardModeTest.SingleVariableGradient
+[       OK ] ForwardModeTest.SingleVariableGradient (0 ms)
+[ RUN      ] ForwardModeTest.BasicOperations
+[       OK ] ForwardModeTest.BasicOperations (0 ms)
+[ RUN      ] ForwardModeTest.ElementaryFunctions
+[       OK ] ForwardModeTest.ElementaryFunctions (0 ms)
+[ RUN      ] ForwardModeTest.CompositeFunction
+[       OK ] ForwardModeTest.CompositeFunction (0 ms)
+[ RUN      ] ForwardModeTest.MultipleVariables
+[       OK ] ForwardModeTest.MultipleVariables (0 ms)
+[ RUN      ] ForwardModeTest.ScalarOperations
+[       OK ] ForwardModeTest.ScalarOperations (0 ms)
+[ RUN      ] ForwardModeTest.ChainedOperations
+[       OK ] ForwardModeTest.ChainedOperations (0 ms)
+[----------] 7 tests from ForwardModeTest (0 ms total)
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+[----------] Global test environment tear-down
+[==========] 36 tests from 6 test suites ran. (4 ms total)
+[  PASSED  ] 36 tests.
 ```
 
-## Contributing
+### Catch2 Unit Tests
 
-Contributions to AutoDiff are welcome and appreciated. By contributing, you agree to abide by the BSD 3-Clause License terms.
+The framework also includes extensive Catch2 unit tests, covering all aspects of automatic differentiation:
 
-### Contribution Guidelines
+```
+(base) 192:test ruben$ ./AutoDiffTests --success
+Randomness seeded to: 457263149
 
-1. **Fork the Repository**: Create your own fork of the project
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AutoDiffTests is a Catch2 v3.4.0 host application.
+Run with -? for options
 
-2. **Create a Branch**: Create a feature branch for your contribution
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+-------------------------------------------------------------------------------
+Basic Variable Operations
+  Evaluation
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_basic.cpp:11
+...............................................................................
 
-3. **Code Style**: Follow the existing code style
-   - Use consistent indentation (4 spaces)
-   - Follow C++17 best practices
-   - Write clear, self-documenting code
-   - Add comments for complex algorithms or non-obvious behavior
-   - Use `snake_case` for variables and functions, `PascalCase` for classes
+/Users/ruben/Research/AutoDiff/test/test_basic.cpp:12: PASSED:
+  REQUIRE( x->evaluate() == 2.0 )
+with expansion:
+  2.0 == 2.0
 
-4. **Documentation**: Add/update documentation for your changes
-   - Maintain or add Doxygen-compatible comments 
-   - Update relevant examples if needed
-   - Update the README if introducing significant features
+/Users/ruben/Research/AutoDiff/test/test_basic.cpp:14: PASSED:
+  REQUIRE( x->evaluate() == 3.0 )
+with expansion:
+  3.0 == 3.0
 
-5. **Testing**: Add appropriate tests
-   - Write unit tests for new functionality
-   - Ensure all tests pass before submitting your PR
-   - Check for memory leaks and undefined behavior
+-------------------------------------------------------------------------------
+Basic Variable Operations
+  Differentiation
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_basic.cpp:17
+...............................................................................
 
-6. **Commit Guidelines**: Write clear commit messages
-   - Use the present tense ("Add feature" not "Added feature")
-   - Use the imperative mood ("Fix bug" not "Fixes bug")
-   - Reference issue numbers if applicable
-   - Keep commits focused on single logical changes
+/Users/ruben/Research/AutoDiff/test/test_basic.cpp:21: PASSED:
+  REQUIRE( dx->evaluate() == 1.0 )
+with expansion:
+  1.0 == 1.0
 
-7. **Pull Request Process**:
-   - Create a pull request against the `develop` branch
-   - Describe the changes in detail
-   - Include any relevant issue numbers
-   - Be responsive to code review feedback
+/Users/ruben/Research/AutoDiff/test/test_basic.cpp:22: PASSED:
+  REQUIRE( dy->evaluate() == 0.0 )
+with expansion:
+  0.0 == 0.0
 
-### Development Workflow
+-------------------------------------------------------------------------------
+Constant Expressions
+  Evaluation
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_basic.cpp:29
+...............................................................................
 
-1. Check the issue tracker for open issues or create a new one
-2. Discuss the implementation approach before making significant changes
-3. Implement your solution
-4. Run tests locally: `cd build && ctest --output-on-failure`
-5. Submit a pull request
+/Users/ruben/Research/AutoDiff/test/test_basic.cpp:30: PASSED:
+  REQUIRE( c->evaluate() == 5.0 )
+with expansion:
+  5.0 == 5.0
 
-### Code Review
+-------------------------------------------------------------------------------
+Constant Expressions
+  Differentiation
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_basic.cpp:33
+...............................................................................
 
-All submissions require review before being merged:
-- Code will be reviewed for correctness, performance, and style
-- Automated tests must pass
-- Documentation must be complete and accurate
+/Users/ruben/Research/AutoDiff/test/test_basic.cpp:35: PASSED:
+  REQUIRE( dc->evaluate() == 0.0 )
+with expansion:
+  0.0 == 0.0
 
-## Support
+-------------------------------------------------------------------------------
+Addition Rule
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_operations.cpp:9
+...............................................................................
 
-For questions, issues, or support:
-- Open an issue on the GitHub repository
-- Contact the maintainer directly for urgent matters or security concerns
+/Users/ruben/Research/AutoDiff/test/test_operations.cpp:14: PASSED:
+  REQUIRE( expr->evaluate() == 5.0 )
+with expansion:
+  5.0 == 5.0
 
-## Acknowledgments
+/Users/ruben/Research/AutoDiff/test/test_operations.cpp:19: PASSED:
+  REQUIRE( dx->evaluate() == 1.0 )
+with expansion:
+  1.0 == 1.0
 
-### Institutional Support
+/Users/ruben/Research/AutoDiff/test/test_operations.cpp:20: PASSED:
+  REQUIRE( dy->evaluate() == 1.0 )
+with expansion:
+  1.0 == 1.0
 
-This project has been developed with the generous support of [NeuroTechNet](https://neurotechnet.com/), an organization dedicated to advancing neural technologies and algorithmic optimization. Their commitment to revolutionizing how industries harness the power of neural technologies has been instrumental in the creation of this framework from its inception.
+-------------------------------------------------------------------------------
+Product Rule
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_operations.cpp:22
+...............................................................................
 
-NeuroTechNet's growing expertise in machine learning, statistical learning, and algorithmic performance optimization has directly influenced the design of this automatic differentiation framework. Their focus on delivering high-quality, efficient software solutions aligned perfectly with our goal of creating a mathematically rigorous yet computationally efficient framework for scientific and industrial applications.
+/Users/ruben/Research/AutoDiff/test/test_operations.cpp:36: PASSED:
+  REQUIRE_THAT( deriv->evaluate(), WithinRel(expected, 1e-6) )
+with expansion:
+  -7.3151100949 and -7.31511 are within 0.0001% of each other
 
-The integration of computational techniques with practical applications—a core aspiration of NeuroTechNet—is reflected in this framework's design principles. AutoDiff embodies this vision by providing efficient differentiation capabilities essential for training neural networks, optimizing complex systems, and solving computational problems across diverse domains.
+-------------------------------------------------------------------------------
+Exponential Function
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_functions.cpp:9
+...............................................................................
 
-We express our sincere gratitude to the entire NeuroTechNet team for their continuous support, technical expertise, and commitment to innovation that have made this project possible. Their contribution to this project represents an important step in their mission to contribute meaningfully to the communities of artificial neural networks and algorithmic optimization.
+/Users/ruben/Research/AutoDiff/test/test_functions.cpp:14: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(std::exp(1.0), 1e-6) )
+with expansion:
+  2.7182818285 and 2.71828 are within 0.0001% of each other
 
-### Contributors
+/Users/ruben/Research/AutoDiff/test/test_functions.cpp:17: PASSED:
+  REQUIRE_THAT( deriv->evaluate(), WithinRel(std::exp(1.0), 1e-6) )
+with expansion:
+  2.7182818285 and 2.71828 are within 0.0001% of each other
 
-We also extend our thanks to:
-- Contributors to the project who have helped refine and expand its capabilities
-- The automatic differentiation research community whose work has informed our approach
-- Users who provide feedback and suggest improvements, helping us continuously enhance the framework
+-------------------------------------------------------------------------------
+Composite Trigonometric Function
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_functions.cpp:20
+...............................................................................
 
-## Conclusion
+/Users/ruben/Research/AutoDiff/test/test_functions.cpp:33: PASSED:
+  REQUIRE_THAT( deriv->evaluate(), WithinRel(expected, 1e-6) )
+with expansion:
+  0.0 and 1.22465e-16 are within 0.0001% of each other
 
-This automatic differentiation framework provides powerful capabilities for numerical computing, with a focus on clean architecture and extensibility. The design principles ensure that the system can be maintained and extended over time, while the implementation details provide high performance for practical applications.
+-------------------------------------------------------------------------------
+Numerical Validation
+  Simple Polynomial
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_validation.cpp:13
+...............................................................................
 
-Whether you're implementing gradient-based optimization, scientific simulations, or machine learning models, this framework provides the tools needed to compute derivatives efficiently and accurately.
+/Users/ruben/Research/AutoDiff/test/test_validation.cpp:24: PASSED:
+  REQUIRE_THAT( deriv->evaluate(), WithinRel(3*pow(1.5, 2) + 2, 1e-6) )
+with expansion:
+  8.75 and 8.75 are within 0.0001% of each other
+
+-------------------------------------------------------------------------------
+Edge Case Handling
+  Division Near Zero
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_edge_cases.cpp:12
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_edge_cases.cpp:19: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(1.0/1e-10, 1e-6) )
+with expansion:
+  10000000000.0 and 1e+10 are within 0.0001% of each other
+
+-------------------------------------------------------------------------------
+Edge Case Handling
+  Exponential at Zero
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_edge_cases.cpp:22
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_edge_cases.cpp:26: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(1.0, 1e-12) )
+with expansion:
+  1.0 and 1 are within 1e-10% of each other
+
+-------------------------------------------------------------------------------
+Hyperbolic Functions
+  Sinh Evaluation
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_hyperbolic.cpp:12
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_hyperbolic.cpp:14: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(std::sinh(1.0), 1e-6) )
+with expansion:
+  1.1752011936 and 1.1752 are within 0.0001% of each other
+
+-------------------------------------------------------------------------------
+Hyperbolic Functions
+  Cosh Derivative
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_hyperbolic.cpp:17
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_hyperbolic.cpp:21: PASSED:
+  REQUIRE_THAT( deriv->evaluate(), WithinRel(std::sinh(0.5), 1e-6) )
+with expansion:
+  0.5210953055 and 0.521095 are within 0.0001% of each other
+
+-------------------------------------------------------------------------------
+Composite Functions
+  Nested Exponential
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_composite.cpp:12
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_composite.cpp:24: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(expected, 1e-6) )
+with expansion:
+  2.3197768247 and 2.31978 are within 0.0001% of each other
+
+-------------------------------------------------------------------------------
+Composite Functions
+  Deeply Nested Derivative
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_composite.cpp:27
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_composite.cpp:38: PASSED:
+  REQUIRE_THAT( deriv->evaluate(), WithinRel(expected, 1e-6) )
+with expansion:
+  0.5378828427 and 0.537883 are within 0.0001% of each other
+
+-------------------------------------------------------------------------------
+Multi-variable Expressions
+  Partial Derivatives
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_multivariable.cpp:13
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_multivariable.cpp:25: PASSED:
+  REQUIRE_THAT( dx->evaluate(), WithinRel(2*2*3, 1e-6) )
+with expansion:
+  12.0 and 12 are within 0.0001% of each other
+
+/Users/ruben/Research/AutoDiff/test/test_multivariable.cpp:26: PASSED:
+  REQUIRE_THAT( dy->evaluate(), WithinRel(2*2, 1e-6) )
+with expansion:
+  4.0 and 4 are within 0.0001% of each other
+
+-------------------------------------------------------------------------------
+Core Differentiation Rules
+  Chain Rule
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:15
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:28: PASSED:
+  REQUIRE_THAT( deriv->evaluate(), WithinRel(expected, 1e-6) )
+with expansion:
+  -0.6323873983 and -0.632387 are within 0.0001% of each other
+
+At x = 1.5
+Analytical: -0.632387
+Numerical:  -0.632387
+Error:      1.2283e-10
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:29: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 1.5) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Core Differentiation Rules
+  Product Rule
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:32
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:44: PASSED:
+  REQUIRE_THAT( deriv->evaluate(), WithinRel(expected, 1e-6) )
+with expansion:
+  23.5288676193 and 23.5289 are within 0.0001% of each other
+
+At x = 1.5
+Analytical: 23.5289
+Numerical:  23.5289
+Error:      1.46903e-09
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:45: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 1.5) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Core Differentiation Rules
+  Quotient Rule
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:48
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:72: PASSED:
+  REQUIRE_THAT( deriv->evaluate(), WithinRel(expected, 1e-6) )
+with expansion:
+  0.0625 and 0.0625 are within 0.0001% of each other
+
+At x = 2
+Analytical: 0.0625
+Numerical:  0.0625
+Error:      6.42473e-11
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:73: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 2.0) )
+with expansion:
+  true
+
+At x = 1
+Analytical: -7.99729
+Numerical:  -7.99729
+Error:      1.87419e-10
+-------------------------------------------------------------------------------
+Core Differentiation Rules
+  Combined Rules
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:76
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:92: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 1.0) )
+with expansion:
+  true
+
+At x = 0.5
+Analytical: -0.457178
+Numerical:  -0.457178
+Error:      2.23407e-11
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:93: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 0.5) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Core Differentiation Rules
+  Multi-variable Product
+  Partial derivative w.r.t x
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:103
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:106: PASSED:
+  REQUIRE_THAT( dx->evaluate(), WithinRel(expected, 1e-6) )
+with expansion:
+  27.0 and 27 are within 0.0001% of each other
+
+-------------------------------------------------------------------------------
+Core Differentiation Rules
+  Multi-variable Product
+  Partial derivative w.r.t y
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:109
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:112: PASSED:
+  REQUIRE_THAT( dy->evaluate(), WithinRel(expected, 1e-6) )
+with expansion:
+  13.5 and 13.5 are within 0.0001% of each other
+
+-------------------------------------------------------------------------------
+Core Differentiation Rules
+  Edge Cases
+  Division by constant
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:117
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:124: PASSED:
+  REQUIRE_THAT( deriv->evaluate(), WithinRel(0.2, 1e-6) )
+with expansion:
+  0.2 and 0.2 are within 0.0001% of each other
+
+At x = 1
+Analytical: 2.76355
+Numerical:  2.76355
+Error:      3.99236e-13
+-------------------------------------------------------------------------------
+Core Differentiation Rules
+  Edge Cases
+  Triple product
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:127
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:136: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 1.0) )
+with expansion:
+  true
+
+At x = 2
+Analytical: 0.84147
+Numerical:  0.84147
+Error:      7.30997e-11
+/Users/ruben/Research/AutoDiff/test/test_rules.cpp:137: PASSED:
+  REQUIRE( validate_derivative(*expr, *y, 2.0) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Trigonometric Functions
+  Sin
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:18
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:20: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(std::sin(pi/4), 1e-6) )
+with expansion:
+  0.7071067812 and 0.707107 are within 0.0001% of each other
+
+At x = 0.785398
+Analytical: 0.707107
+Numerical:  0.707107
+Error:      2.86138e-12
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:21: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, pi/4) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Trigonometric Functions
+  Cos
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:24
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:26: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(std::cos(pi/4), 1e-6) )
+with expansion:
+  0.7071067812 and 0.707107 are within 0.0001% of each other
+
+At x = 0.785398
+Analytical: -0.707107
+Numerical:  -0.707107
+Error:      5.83724e-11
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:27: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, pi/4) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Trigonometric Functions
+  Tan
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:30
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:32: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(1.0, 1e-6) )
+with expansion:
+  1.0 and 1 are within 0.0001% of each other
+
+At x = 0.785398
+Analytical: 2
+Numerical:  2
+Error:      1.09022e-10
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:33: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, pi/4) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Exponential/Logarithmic
+  Exp
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:40
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:42: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(std::exp(1.0), 1e-6) )
+with expansion:
+  2.7182818285 and 2.71828 are within 0.0001% of each other
+
+At x = 1
+Analytical: 2.71828
+Numerical:  2.71828
+Error:      1.63457e-10
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:43: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 1.0) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Exponential/Logarithmic
+  Log
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:46
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:48: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(0.0, 1e-6) )
+with expansion:
+  0.0 and 0 are within 0.0001% of each other
+
+At x = 1
+Analytical: 1
+Numerical:  1
+Error:      2.64221e-11
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:49: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 1.0) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Square Root/Reciprocal
+  Sqrt
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:56
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:58: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(2.0, 1e-6) )
+with expansion:
+  2.0 and 2 are within 0.0001% of each other
+
+At x = 4
+Analytical: 0.25
+Numerical:  0.25
+Error:      7.60778e-11
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:59: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 4.0) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Square Root/Reciprocal
+  Reciprocal
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:62
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:64: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(0.25, 1e-6) )
+with expansion:
+  0.25 and 0.25 are within 0.0001% of each other
+
+At x = 4
+Analytical: -0.0625
+Numerical:  -0.0625
+Error:      5.14166e-12
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:65: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 4.0) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Error Functions
+  Erf
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:72
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:74: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(std::erf(0.5), 1e-6) )
+with expansion:
+  0.5204998778 and 0.5205 are within 0.0001% of each other
+
+At x = 0.5
+Analytical: 0.878783
+Numerical:  0.878783
+Error:      4.81054e-11
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:75: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 0.5) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Error Functions
+  Erfc
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:78
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:80: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(std::erfc(0.5), 1e-6) )
+with expansion:
+  0.4795001222 and 0.4795 are within 0.0001% of each other
+
+At x = 0.5
+Analytical: -0.878783
+Numerical:  -0.878783
+Error:      2.03498e-11
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:81: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 0.5) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Gamma Functions
+  Tgamma
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:88
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:90: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(24.0, 1e-6) )
+with expansion:
+  24.0 and 24 are within 0.0001% of each other
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Gamma Functions
+  Lgamma
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:93
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:95: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(std::lgamma(5.0), 1e-6) )
+with expansion:
+  3.1780538303 and 3.17805 are within 0.0001% of each other
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Hyperbolic Functions
+  Sinh
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:102
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:104: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(std::sinh(0.5), 1e-6) )
+with expansion:
+  0.5210953055 and 0.521095 are within 0.0001% of each other
+
+At x = 0.5
+Analytical: 1.12763
+Numerical:  1.12763
+Error:      7.38254e-12
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:105: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 0.5) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Hyperbolic Functions
+  Cosh
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:108
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:110: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(std::cosh(0.5), 1e-6) )
+with expansion:
+  1.1276259652 and 1.12763 are within 0.0001% of each other
+
+At x = 0.5
+Analytical: 0.521095
+Numerical:  0.521095
+Error:      3.2453e-11
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:111: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 0.5) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Hyperbolic Functions
+  Tanh
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:114
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:116: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(std::tanh(0.5), 1e-6) )
+with expansion:
+  0.4621171573 and 0.462117 are within 0.0001% of each other
+
+At x = 0.5
+Analytical: 0.786448
+Numerical:  0.786448
+Error:      1.49258e-12
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:117: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 0.5) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Inverse Hyperbolic Functions
+  Asinh
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:122
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:125: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(0.0, 1e-6) )
+with expansion:
+  0.0 and 0 are within 0.0001% of each other
+
+At x = 0
+Analytical: 1
+Numerical:  1
+Error:      1.66644e-13
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:126: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 0.0) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Inverse Hyperbolic Functions
+  Acosh
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:129
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:132: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(std::acosh(1.5), 1e-6) )
+with expansion:
+  0.9624236501 and 0.962424 are within 0.0001% of each other
+
+At x = 1.5
+Analytical: 0.894427
+Numerical:  0.894427
+Error:      1.32618e-10
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:133: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 1.5) )
+with expansion:
+  true
+
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Inverse Hyperbolic Functions
+  Atanh
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:136
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:139: PASSED:
+  REQUIRE_THAT( expr->evaluate(), WithinRel(std::atanh(0.5), 1e-6) )
+with expansion:
+  0.5493061443 and 0.549306 are within 0.0001% of each other
+
+At x = 0.5
+Analytical: 1.33333
+Numerical:  1.33333
+Error:      1.98372e-11
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:140: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 0.5) )
+with expansion:
+  true
+
+At x = 0.25
+Analytical: 0.330219
+Numerical:  0.330219
+Error:      1.34213e-11
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Composite Function Validation
+  Nested Functions
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:147
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:153: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 0.25) )
+with expansion:
+  true
+
+At x = 0.5
+Analytical: 0.513974
+Numerical:  0.513974
+Error:      2.03545e-11
+-------------------------------------------------------------------------------
+Elementary Function Coverage
+  Composite Function Validation
+  Deep Composition
+-------------------------------------------------------------------------------
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:156
+...............................................................................
+
+/Users/ruben/Research/AutoDiff/test/test_elementary_functions.cpp:162: PASSED:
+  REQUIRE( validate_derivative(*expr, *x, 0.5) )
+with expansion:
+  true
+
+===============================================================================
+All tests passed (69 assertions in 13 test cases)
+```

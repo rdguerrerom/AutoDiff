@@ -218,46 +218,46 @@ The framework is implemented in three progressive stages, with each stage buildi
 
 The following diagram illustrates the relationship between key components from Stage 1 and Stage 2:
 
-```
-Stage 1: Expression System                   Stage 2: Computational Graph
-┌───────────────────────────┐               ┌───────────────────────────┐
-│                           │               │                           │
-│  ┌─────────────────────┐  │               │  ┌─────────────────────┐  │
-│  │  Expression<T>      │  │    Evolves    │  │  GraphNode<T>       │  │
-│  │ ┌───────────────┐   │  │    Into      │  │ ┌───────────────┐   │  │
-│  │ │ - evaluate()  │   │  │    ───────►  │  │ │ - forward()   │   │  │
-│  │ │ - differentiate() │  │               │  │ │ - backward()  │   │  │
-│  │ └───────────────┘   │  │               │  │ └───────────────┘   │  │
-│  └─────────────────────┘  │               │  └─────────────────────┘  │
-│            ▲              │               │            ▲              │
-│            │              │               │            │              │
-│  ┌─────────┴─────────┐    │               │  ┌─────────┴─────────┐    │
-│  │                   │    │               │  │                   │    │
-│  │  ┌─────────────┐  │    │               │  │  ┌─────────────┐  │    │
-│  │  │ Variable<T> │  │    │    Maps To    │  │  │VariableNode<T>│    │
-│  │  └─────────────┘  │    │    ───────►   │  │  └─────────────┘  │    │
-│  │                   │    │               │  │                   │    │
-│  │  ┌─────────────┐  │    │               │  │  ┌─────────────┐  │    │
-│  │  │ Constant<T> │  │    │    Maps To    │  │  │ConstantNode<T>│    │
-│  │  └─────────────┘  │    │    ───────►   │  │  └─────────────┘  │    │
-│  │                   │    │               │  │                   │    │
-│  │  ┌─────────────┐  │    │               │  │  ┌─────────────┐  │    │
-│  │  │BinaryOp<T>  │  │    │    Maps To    │  │  │BinaryOpNode<T>│    │
-│  │  └─────────────┘  │    │    ───────►   │  │  └─────────────┘  │    │
-│  │                   │    │               │  │                   │    │
-│  │  ┌─────────────┐  │    │               │  │  ┌─────────────┐  │    │
-│  │  │UnaryOp<T>   │  │    │    Maps To    │  │  │UnaryOpNode<T> │    │
-│  │  └─────────────┘  │    │    ───────►   │  │  └─────────────┘  │    │
-│  │                   │    │               │  │                   │    │
-│  └───────────────────┘    │               │  └───────────────────┘    │
-│                           │               │                           │
-└───────────────────────────┘               └───────────────────────────┘
-        │                                                 │
-        │                                                 │
-        │       ┌───────────────────────────────┐         │
-        └───────┤       DualNumber<T>           ├─────────┘
-                │   (Forward-Mode Bridge)       │
-                └───────────────────────────────┘
+```mermaid
+graph LR
+    subgraph "Stage 1: Expression System"
+        A1[Expression&lt;T&gt;] --> A2[evaluate()]
+        A1 --> A3[differentiate()]
+        A1 --> A4["Terminal Expressions"]
+        A4 --> A5["Variable&lt;T&gt;"]
+        A4 --> A6["Constant&lt;T&gt;"]
+        A1 --> A7["Operations"]
+        A7 --> A8["BinaryOp&lt;T&gt;"]
+        A7 --> A9["UnaryOp&lt;T&gt;"]
+    end
+    
+    subgraph "Stage 2: Computational Graph"
+        B1[GraphNode&lt;T&gt;] --> B2[forward()]
+        B1 --> B3[backward()]
+        B1 --> B4["Terminal Nodes"]
+        B4 --> B5["VariableNode&lt;T&gt;"]
+        B4 --> B6["ConstantNode&lt;T&gt;"]
+        B1 --> B7["Operation Nodes"]
+        B7 --> B8["BinaryOpNode&lt;T&gt;"]
+        B7 --> B9["UnaryOpNode&lt;T&gt;"]
+    end
+    
+    A1 -- "Evolves Into" --> B1
+    A5 -- "Maps To" --> B5
+    A6 -- "Maps To" --> B6
+    A8 -- "Maps To" --> B8
+    A9 -- "Maps To" --> B9
+    
+    subgraph "Bridge"
+        C1["DualNumber&lt;T&gt;"]
+    end
+    
+    A1 -- "Connects via" --> C1
+    B1 -- "Connects via" --> C1
+    
+    style A1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style B1 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style C1 fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
 ```
 
 ### Stage 1 to Stage 2 Transition
@@ -350,32 +350,31 @@ Higher-level modules depend on abstractions:
 
 ## Architecture Overview
 
-```
-┌─────────────────────────────────────┐
-│         Expression System           │
-├─────────────────┬───────────────────┤
-│                 │                   │
-│  Forward Mode   │   Reverse Mode    │
-│  (DualNumber)   │   (Graph-based)   │
-│                 │                   │
-└─────────────────┴───────────────────┘
-          │                 │
-          │                 │
-          ▼                 ▼
-┌─────────────────┐ ┌───────────────────┐
-│  Elementary     │ │   Control Flow    │
-│  Functions      │ │   Constructs      │
-└─────────────────┘ └───────────────────┘
-          │                 │
-          │                 │
-          ▼                 ▼
-┌─────────────────────────────────────┐
-│        Optimization System          │
-├─────────────────────────────────────┤
-│ - Constant Propagation              │
-│ - Common Subexpression Elimination  │
-│ - Algebraic Simplification          │
-└─────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph "Core Components"
+        A[Expression System] --> B[Forward Mode]
+        A --> C[Reverse Mode]
+        B --> D[Elementary Functions]
+        C --> D
+        B --> E[Control Flow Constructs]
+        C --> E
+        D --> F[Optimization System]
+        E --> F
+    end
+    
+    subgraph "Optimization System"
+        F --> G[Constant Propagation]
+        F --> H[Common Subexpression Elimination]
+        F --> I[Algebraic Simplification]
+    end
+    
+    style A fill:#d0e0ff,stroke:#3080ff
+    style B fill:#d0ffe0,stroke:#30ff80
+    style C fill:#ffe0d0,stroke:#ff8030
+    style D fill:#e0d0ff,stroke:#8030ff
+    style E fill:#ffffd0,stroke:#ffff30
+    style F fill:#ffd0e0,stroke:#ff30ff
 ```
 
 ### Key Components
@@ -392,21 +391,18 @@ Higher-level modules depend on abstractions:
 
 ### Expression System
 
-The expression system uses a composable tree structure to represent mathematical formulas:
-
-```
-        ┌───────┐
-        │   +   │
-        └───┬───┘
-      ┌─────┴─────┐
-┌─────▼───┐   ┌───▼─────┐
-│    *    │   │ Constant│
-└────┬────┘   │    2    │
-     │        └─────────┘
-┌────┴────┐
-│ Variable│
-│    x    │
-└─────────┘
+```mermaid
+graph TD
+    A[Expression Tree] --> B["+"]
+    B --> C["*"]
+    B --> D["Constant: 2"]
+    C --> E["Variable: x"]
+    
+    style A fill:#f5f5f5,stroke:#333,stroke-width:2px
+    style B fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style C fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style D fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style E fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
 ```
 
 This allows us to:
@@ -437,24 +433,18 @@ public:
 
 ### Computational Graph
 
-Reverse-mode AD builds a computational graph tracking all operations:
-
-```
-     ┌───────┐
-     │Output │
-     └───┬───┘
-         │
-     ┌───▼───┐
-     │   *   │
-     └───┬───┘
-   ┌─────┴─────┐
-┌──▼──┐     ┌──▼──┐
-│ sin │     │  x  │
-└──┬──┘     └─────┘
-   │
-┌──▼──┐
-│  x  │
-└─────┘
+```mermaid
+graph TD
+    A["Output Node"] --> B["Multiplication"]
+    B --> C["Sin"]
+    B --> D["Variable: x"]
+    C --> E["Variable: x"]
+    
+    style A fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style B fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style C fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style D fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
+    style E fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
 ```
 
 During backward pass:
@@ -464,23 +454,29 @@ During backward pass:
 
 ### Common Subexpression Elimination
 
-To optimize performance, the framework identifies and reuses common subexpressions:
-
-```
-Before:                       After:
-  ┌───┐                       ┌───┐
-  │ + │                       │ + │
-  └─┬─┘                       └─┬─┘
- ┌──┴──┐                     ┌──┴──┐
-┌▼─┐  ┌▼─┐                  ┌▼─┐   │
-│* │  │* │                  │* │   │
-└┬─┘  └┬─┘                  └┬─┘   │
- │     │                     │     │
-┌▼─┐  ┌▼─┐     ───────►    ┌▼─┐    │
-│x+a│  │x+a│                │x+a│   │
-└───┘  └───┘                └┬──┘   │
-                             │      │
-                             └──────┘
+```mermaid
+graph TD
+    subgraph "Before Optimization"
+        A1["+"] --> B1["*"]
+        A1 --> B2["*"]
+        B1 --> C1["x+a"]
+        B2 --> C2["x+a"]
+    end
+    
+    subgraph "After Optimization"
+        A2["+"] --> B3["*"]
+        A2 --> C3["x+a"]
+        B3 --> C3
+    end
+    
+    style A1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style A2 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style B1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style B2 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style B3 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
+    style C1 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style C2 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    style C3 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
 ```
 
 ### Control Flow Differentiation

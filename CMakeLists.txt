@@ -33,6 +33,35 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 # Core Library
 add_subdirectory(AutoDiff)
 
+# Benchmark Configuration
+option(BUILD_BENCHMARKS "Build benchmark suite" ON)
+if(BUILD_BENCHMARKS)
+    include(FetchContent)
+    
+    # Fetch and configure Google Benchmark
+    FetchContent_Declare(
+        benchmark
+        GIT_REPOSITORY https://github.com/google/benchmark.git
+        GIT_TAG v1.8.0
+    )
+    
+    # Set these options BEFORE making benchmark available
+    set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Disable benchmark tests")
+    set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "Disable GTest dependency")
+    set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON CACHE BOOL "Download missing deps")
+    
+    FetchContent_MakeAvailable(benchmark)
+    
+    # Add this to suppress pthread warnings on macOS
+    if(APPLE)
+        set_target_properties(benchmark PROPERTIES 
+            INTERFACE_COMPILE_OPTIONS "-Wno-deprecated-declarations"
+        )
+    endif()
+    
+    add_subdirectory(benchmarks)
+endif()
+
 # Testing Configuration
 option(BUILD_TESTING "Build test suite" ON)
 if(BUILD_TESTING)

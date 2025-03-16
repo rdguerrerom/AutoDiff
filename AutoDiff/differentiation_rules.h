@@ -27,7 +27,7 @@ expr::ExprPtr<T> chain_rule(
     expr::ExprPtr<T> outer_deriv,
     expr::ExprPtr<T> inner_deriv
 ) {
-    return expr::make_expression<T, expr::Multiplication<T>>(
+    return std::make_unique<expr::Multiplication<T>>(
         std::move(outer_deriv),
         std::move(inner_deriv)
     );
@@ -49,9 +49,9 @@ expr::ExprPtr<T> product_rule(
     expr::ExprPtr<T> f, expr::ExprPtr<T> df,
     expr::ExprPtr<T> g, expr::ExprPtr<T> dg
 ) {
-    return expr::make_expression<T, expr::Addition<T>>(
-        expr::make_expression<T, expr::Multiplication<T>>(std::move(df), std::move(g)),
-        expr::make_expression<T, expr::Multiplication<T>>(std::move(f), std::move(dg))
+    return std::make_unique<expr::Addition<T>>(
+        std::make_unique<expr::Multiplication<T>>(std::move(df), std::move(g)),
+        std::make_unique<expr::Multiplication<T>>(std::move(f), std::move(dg))
     );
 }
 
@@ -71,17 +71,17 @@ expr::ExprPtr<T> quotient_rule(
     expr::ExprPtr<T> f, expr::ExprPtr<T> df,
     expr::ExprPtr<T> g, expr::ExprPtr<T> dg
 ) {
-    auto numerator = expr::make_expression<T, expr::Subtraction<T>>(
-        expr::make_expression<T, expr::Multiplication<T>>(std::move(df), g->clone()),
-        expr::make_expression<T, expr::Multiplication<T>>(f->clone(), std::move(dg))
+    auto numerator = std::make_unique<expr::Subtraction<T>>(
+        std::make_unique<expr::Multiplication<T>>(std::move(df), g->clone()),
+        std::make_unique<expr::Multiplication<T>>(f->clone(), std::move(dg))
     );
 
-    auto denominator = expr::make_expression<T, expr::Pow<T>>(
+    auto denominator = std::make_unique<expr::Pow<T>>(
         std::move(g),
-        expr::make_expression<T, expr::Constant<T>>(2)
+        std::make_unique<expr::Constant<T>>(2)
     );
 
-    return expr::make_expression<T, expr::Division<T>>(
+    return std::make_unique<expr::Division<T>>(
         std::move(numerator),
         std::move(denominator)
     );

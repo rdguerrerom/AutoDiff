@@ -77,12 +77,17 @@ flowchart TD
         F --> I[Algebraic Simplification]
     end
     
-    style A fill:#d0e0ff,stroke:#3080ff
-    style B fill:#d0ffe0,stroke:#30ff80
-    style C fill:#ffe0d0,stroke:#ff8030
-    style D fill:#e0d0ff,stroke:#8030ff
-    style E fill:#ffffd0,stroke:#ffff30
-    style F fill:#ffd0e0,stroke:#ff30ff
+    classDef core fill:#78a3ff,stroke:#3060c0,stroke-width:2px,color:#fff
+    classDef mode fill:#98e5a7,stroke:#30a050,stroke-width:2px,color:#fff
+    classDef feature fill:#b991ff,stroke:#7030c0,stroke-width:2px,color:#fff
+    classDef optimization fill:#ff9d73,stroke:#d04000,stroke-width:2px,color:#fff
+    classDef control fill:#ffed7a,stroke:#c0a030,stroke-width:2px,color:#333
+    
+    class A core
+    class B,C mode
+    class D feature
+    class E control
+    class F,G,H,I optimization
 ```
 
 ### Key Components
@@ -101,16 +106,20 @@ flowchart TD
 
 ```mermaid
 graph TD
-    A[Expression Tree] --> B["+"]
+    A["Expression Tree"] --> B["+"]
     B --> C["*"]
     B --> D["Constant: 2"]
     C --> E["Variable: x"]
     
-    style A fill:#f5f5f5,stroke:#333,stroke-width:2px
-    style B fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style C fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style D fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
-    style E fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
+    classDef root fill:#f5f5f5,stroke:#333,stroke-width:2px,color:#333
+    classDef operation fill:#78a3ff,stroke:#3060c0,stroke-width:2px,color:#fff
+    classDef constant fill:#ffb07c,stroke:#e06030,stroke-width:2px,color:#fff
+    classDef variable fill:#98e5a7,stroke:#30a050,stroke-width:2px,color:#fff
+    
+    class A root
+    class B,C operation
+    class D constant
+    class E variable
 ```
 
 This allows us to:
@@ -148,11 +157,13 @@ graph TD
     B --> D["Variable: x"]
     C --> E["Variable: x"]
     
-    style A fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
-    style B fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style C fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style D fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
-    style E fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
+    classDef output fill:#ff9d73,stroke:#d04000,stroke-width:2px,color:#fff
+    classDef operation fill:#78a3ff,stroke:#3060c0,stroke-width:2px,color:#fff
+    classDef variable fill:#98e5a7,stroke:#30a050,stroke-width:2px,color:#fff
+    
+    class A output
+    class B,C operation
+    class D,E variable
 ```
 
 During backward pass:
@@ -177,14 +188,11 @@ graph TD
         B3 --> C3
     end
     
-    style A1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style A2 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style B1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style B2 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style B3 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style C1 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
-    style C2 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
-    style C3 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
+    classDef operation fill:#78a3ff,stroke:#3060c0,stroke-width:2px,color:#fff
+    classDef expression fill:#ffb07c,stroke:#e06030,stroke-width:2px,color:#fff
+    
+    class A1,A2,B1,B2,B3 operation
+    class C1,C2,C3 expression
 ```
 
 ### Control Flow Differentiation
@@ -246,9 +254,13 @@ graph LR
     A1 -- "Connects via" --> C1
     B1 -- "Connects via" --> C1
     
-    style A1 fill:#d0e0ff,stroke:#3080ff,stroke-width:2px
-    style B1 fill:#ffe0d0,stroke:#ff8030,stroke-width:2px
-    style C1 fill:#d0ffe0,stroke:#30ff80,stroke-width:2px
+    classDef stage1 fill:#78a3ff,stroke:#3060c0,stroke-width:2px,color:#fff
+    classDef stage2 fill:#ff9d73,stroke:#d04000,stroke-width:2px,color:#fff
+    classDef bridge fill:#98e5a7,stroke:#30a050,stroke-width:2px,color:#fff
+    
+    class A1,A2,A3,A4,A5,A6,A7,A8,A9 stage1
+    class B1,B2,B3,B4,B5,B6,B7,B8,B9 stage2
+    class C1 bridge
 ```
 
 ### Stage 1 to Stage 2 Transition

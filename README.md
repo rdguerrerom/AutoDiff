@@ -1573,3 +1573,108 @@ with expansion:
 ===============================================================================
 All tests passed (69 assertions in 13 test cases)
 ```
+
+### Stage 2 Tests
+
+The framework has been thoroughly tested to ensure proper functionality. Below are the Stage 2 test results:
+
+```
+(base) 192:test ruben$ ./stage2_tests
+Running main() from /Users/ruben/Research/AutoDiff/build/_deps/googletest-src/googletest/src/gtest_main.cc
+[==========] Running 36 tests from 6 test suites.
+[----------] Global test environment set-up.
+[----------] 5 tests from ComputationalGraphTest
+[ RUN      ] ComputationalGraphTest.BasicForwardPass
+[       OK ] ComputationalGraphTest.BasicForwardPass (0 ms)
+[ RUN      ] ComputationalGraphTest.BackwardGradientAccumulation
+[       OK ] ComputationalGraphTest.BackwardGradientAccumulation (0 ms)
+[ RUN      ] ComputationalGraphTest.MultiDependentNodes
+[       OK ] ComputationalGraphTest.MultiDependentNodes (0 ms)
+[ RUN      ] ComputationalGraphTest.SubtractionGradient
+[       OK ] ComputationalGraphTest.SubtractionGradient (0 ms)
+[ RUN      ] ComputationalGraphTest.DivisionGradient
+[       OK ] ComputationalGraphTest.DivisionGradient (0 ms)
+[----------] 5 tests from ComputationalGraphTest (0 ms total)
+
+[----------] 8 tests from ReverseModeTest
+[ RUN      ] ReverseModeTest.SingleVariableGradient
+[       OK ] ReverseModeTest.SingleVariableGradient (0 ms)
+[ RUN      ] ReverseModeTest.BasicOperations
+[       OK ] ReverseModeTest.BasicOperations (0 ms)
+[ RUN      ] ReverseModeTest.ElementaryFunctions
+[       OK ] ReverseModeTest.ElementaryFunctions (0 ms)
+[ RUN      ] ReverseModeTest.CompositeFunction
+[       OK ] ReverseModeTest.CompositeFunction (0 ms)
+[ RUN      ] ReverseModeTest.MultipleVariables
+[       OK ] ReverseModeTest.MultipleVariables (0 ms)
+[ RUN      ] ReverseModeTest.GradientAccumulation
+[       OK ] ReverseModeTest.GradientAccumulation (0 ms)
+[ RUN      ] ReverseModeTest.SetVariable
+[       OK ] ReverseModeTest.SetVariable (0 ms)
+[ RUN      ] ReverseModeTest.ChainedOperations
+[       OK ] ReverseModeTest.ChainedOperations (0 ms)
+[----------] 8 tests from ReverseModeTest (0 ms total)
+
+[----------] 2 tests from ControlFlowTest
+[ RUN      ] ControlFlowTest.SimpleLoopDifferentiation
+[       OK ] ControlFlowTest.SimpleLoopDifferentiation (0 ms)
+[ RUN      ] ControlFlowTest.ConditionalBranchGradient
+[       OK ] ControlFlowTest.ConditionalBranchGradient (0 ms)
+[----------] 2 tests from ControlFlowTest (0 ms total)
+
+[----------] 9 tests from CustomFunctionTest
+[ RUN      ] CustomFunctionTest.BasicFunction
+[       OK ] CustomFunctionTest.BasicFunction (0 ms)
+[ RUN      ] CustomFunctionTest.SingleInput
+[       OK ] CustomFunctionTest.SingleInput (0 ms)
+[ RUN      ] CustomFunctionTest.MultipleInputs
+[       OK ] CustomFunctionTest.MultipleInputs (0 ms)
+[ RUN      ] CustomFunctionTest.Composition
+[       OK ] CustomFunctionTest.Composition (0 ms)
+[ RUN      ] CustomFunctionTest.GradientAccumulation
+[       OK ] CustomFunctionTest.GradientAccumulation (0 ms)
+[ RUN      ] CustomFunctionTest.NumericalGradientCheck
+[       OK ] CustomFunctionTest.NumericalGradientCheck (1 ms)
+[ RUN      ] CustomFunctionTest.VariableReuse
+[       OK ] CustomFunctionTest.VariableReuse (0 ms)
+[ RUN      ] CustomFunctionTest.EmptyInputs
+[       OK ] CustomFunctionTest.EmptyInputs (0 ms)
+[ RUN      ] CustomFunctionTest.MismatchedGradients
+[       OK ] CustomFunctionTest.MismatchedGradients (0 ms)
+[----------] 9 tests from CustomFunctionTest (1 ms total)
+
+[----------] 5 tests from OptimizerTest
+[ RUN      ] OptimizerTest.ConstantPropagationAndFolding
+[       OK ] OptimizerTest.ConstantPropagationAndFolding (0 ms)
+[ RUN      ] OptimizerTest.CommonSubexpressionElimination
+[       OK ] OptimizerTest.CommonSubexpressionElimination (0 ms)
+[ RUN      ] OptimizerTest.AlgebraicSimplifications
+[       OK ] OptimizerTest.AlgebraicSimplifications (0 ms)
+[ RUN      ] OptimizerTest.PerformanceMonitoring
+[       OK ] OptimizerTest.PerformanceMonitoring (0 ms)
+[ RUN      ] OptimizerTest.ErrorHandlingInOptimizer
+[       OK ] OptimizerTest.ErrorHandlingInOptimizer (1 ms)
+[----------] 5 tests from OptimizerTest (1 ms total)
+
+[----------] 7 tests from ForwardModeTest
+[ RUN      ] ForwardModeTest.SingleVariableGradient
+[       OK ] ForwardModeTest.SingleVariableGradient (0 ms)
+[ RUN      ] ForwardModeTest.BasicOperations
+[       OK ] ForwardModeTest.BasicOperations (0 ms)
+[ RUN      ] ForwardModeTest.ElementaryFunctions
+[       OK ] ForwardModeTest.ElementaryFunctions (0 ms)
+[ RUN      ] ForwardModeTest.CompositeFunction
+[       OK ] ForwardModeTest.CompositeFunction (0 ms)
+[ RUN      ] ForwardModeTest.MultipleVariables
+[       OK ] ForwardModeTest.MultipleVariables (0 ms)
+[ RUN      ] ForwardModeTest.ScalarOperations
+[       OK ] ForwardModeTest.ScalarOperations (0 ms)
+[ RUN      ] ForwardModeTest.ChainedOperations
+[       OK ] ForwardModeTest.ChainedOperations (0 ms)
+[----------] 7 tests from ForwardModeTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 36 tests from 6 test suites ran. (4 ms total)
+[  PASSED  ] 36 tests.
+```
+

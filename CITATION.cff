@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Guerrero
+    given-names: Ruben D.
+    orcid: https://orcid.org/0000-0003-4523-1788
+title: "AutoDiff"
+version: 1.0.0
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.15056738
+date-released: 2025-03-20

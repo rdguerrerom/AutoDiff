@@ -74,17 +74,17 @@ struct Atom {
 
 namespace Parameters {
     struct UFFAtom {
-        double r1;          // Covalent radius (Å)
-        double theta0_deg;  // Equilibrium angle (degrees)
-        double x;           // LJ sigma (Å)
-        double D1;          // LJ epsilon (kcal/mol)
-        double zeta;
-        double Z1;          // Atomic number
-        double V1;          // Torsional barrier
-        double U1;
-        double GMP_Xi;      // Electronegativity
-        double GMP_Hardness;
-        double GMP_Radius;
+        double r1;          // Valence bond radius
+        double theta0_deg;  // valence angle
+        double x;           // vdW characteristic length
+        double D1;          // vdW atomic energy
+        double zeta;        // vdW scaling term
+        double Z1;          // effective charge
+        double V1;          // sp3 torsional barrier parameter
+        double U1;          // torsional contribution for sp2-sp3 bonds
+        double GMP_Xi;      // GMP Electronegativity;
+        double GMP_Hardness;// GMP Hardness
+        double GMP_Radius;  // GMP Radius value
 
         double theta0() const noexcept { return theta0_deg * Constants::deg2rad; }
     };
@@ -184,8 +184,8 @@ private:
   std::unordered_set<std::pair<size_t, size_t>, PairHash> excluded_pairs;
 
   // Scaling factors for 1-4 interactions
-  static constexpr double vdw_14_scale = 0.5;  // Missing constant
-  static constexpr double elec_14_scale = 0.5;
+  static constexpr double vdw_14_scale = 0.25;  // Missing constant
+  static constexpr double elec_14_scale = 0.75;
 
   const Parameters::UFFAtom& get_params(const std::string& type) const {
     try {
@@ -245,7 +245,7 @@ private:
         // Match RDKit's implementation for different atom types
         if (central_atom_type == "C_R") {
             // For sp2 carbon
-            K = 6.0; // kcal/mol
+            K = 6.0/3.0; // kcal/mol
             C0 = 1.0;
             C1 = -1.0;
             C2 = 0.0;
@@ -435,7 +435,7 @@ public:
       const double K = beta * p1.Z1 * p3.Z1 / std::pow(r13, 5);
       const double r_term = r12 * r23;
       const double inner_bit = 3.0 * r_term * (1.0 - std::cos(theta0) * std::cos(theta0)) - r13_sq * std::cos(theta0);
-      const double force_constant = K * r_term * inner_bit;
+      const double force_constant = K * r_term * inner_bit * 0.5;
 
       // Calculate angle bending energy using cosine-harmonic form
       const double sin_theta_sq = 1.0 - cos_theta_clamped * cos_theta_clamped;
@@ -554,7 +554,7 @@ public:
         // Case 2: sp2-sp2
         // Calculate V using equation 17 from UFF paper
         V = 5.0 * std::sqrt(params_j.U1 * params_k.U1) * 
-          (1.0 + 4.18 * std::log(bond_order));
+          (1.0 + 4.18 * std::log(bond_order))/2.0;
         n = 2;
         cos_term = 1.0; // phi0 = 180°
       } else if (is_sp2_sp3) {

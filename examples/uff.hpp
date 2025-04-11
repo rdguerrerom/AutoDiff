@@ -104,74 +104,73 @@ struct PairHash {
 
 class TopologyBuilder {
 public:
-    static std::vector<std::array<size_t, 2>> detect_bonds(
-        const std::vector<Atom>& atoms, 
-        double tolerance = 1.2
-    ) {
-        std::vector<std::array<size_t, 2>> bonds;
-        for(size_t i = 0; i < atoms.size(); ++i) {
-            for(size_t j = i+1; j < atoms.size(); ++j) {
-                const auto& a = atoms[i];
-                const auto& b = atoms[j];
-                const double r_cov = Parameters::atom_parameters.at(a.type).r1 
-                                    + Parameters::atom_parameters.at(b.type).r1;
-                const double r_act = (a.position - b.position).norm();
-                
-                if(r_act <= tolerance * r_cov) {
-                    bonds.push_back({i, j});
-                }
-            }
+  static std::vector<std::array<size_t, 2>> detect_bonds(
+    const std::vector<Atom>& atoms, 
+    double tolerance = 1.0
+  ) {
+    std::vector<std::array<size_t, 2>> bonds;
+    for(size_t i = 0; i < atoms.size(); ++i) {
+      for(size_t j = i+1; j < atoms.size(); ++j) {
+        const auto& a = atoms[i];
+        const auto& b = atoms[j];
+        const double r_cov = Parameters::atom_parameters.at(a.type).r1 
+          + Parameters::atom_parameters.at(b.type).r1;
+        const double r_act = (a.position - b.position).norm();
+
+        if(r_act <= tolerance * r_cov) {
+          bonds.push_back({i, j});
         }
-        return bonds;
+      }
+    }
+    return bonds;
+  }
+
+  static std::vector<std::array<size_t, 3>> detect_angles(
+    const std::vector<std::array<size_t, 2>>& bonds
+  ) {
+    std::unordered_map<size_t, std::vector<size_t>> adj_list;
+    for(const auto& bond : bonds) {
+      adj_list[bond[0]].push_back(bond[1]);
+      adj_list[bond[1]].push_back(bond[0]);
     }
 
-    static std::vector<std::array<size_t, 3>> detect_angles(
-        const std::vector<std::array<size_t, 2>>& bonds
-    ) {
-        std::unordered_map<size_t, std::vector<size_t>> adj_list;
-        for(const auto& bond : bonds) {
-            adj_list[bond[0]].push_back(bond[1]);
-            adj_list[bond[1]].push_back(bond[0]);
+    std::vector<std::array<size_t, 3>> angles;
+    for(const auto& [center, neighbors] : adj_list) {
+      for(size_t i = 0; i < neighbors.size(); ++i) {
+        for(size_t j = i+1; j < neighbors.size(); ++j) {
+          angles.push_back({neighbors[i], center, neighbors[j]});
         }
-
-        std::vector<std::array<size_t, 3>> angles;
-        for(const auto& [center, neighbors] : adj_list) {
-            for(size_t i = 0; i < neighbors.size(); ++i) {
-                for(size_t j = i+1; j < neighbors.size(); ++j) {
-                    angles.push_back({neighbors[i], center, neighbors[j]});
-                }
-            }
-        }
-        return angles;
+      }
+    }
+    return angles;
+  }
+  static std::vector<std::array<size_t, 4>> detect_torsions(
+    const std::vector<std::array<size_t, 2>>& bonds) {
+    std::unordered_map<size_t, std::vector<size_t>> adj_list;
+    for (const auto& bond : bonds) {
+      adj_list[bond[0]].push_back(bond[1]);
+      adj_list[bond[1]].push_back(bond[0]);
     }
 
-    static std::vector<std::array<size_t, 4>> detect_torsions(
-        const std::vector<std::array<size_t, 2>>& bonds
-    ) {
-        std::unordered_map<size_t, std::vector<size_t>> adj_list;
-        for(const auto& bond : bonds) {
-            adj_list[bond[0]].push_back(bond[1]);
-            adj_list[bond[1]].push_back(bond[0]);
+    std::vector<std::array<size_t, 4>> torsions;
+    for (const auto& bond : bonds) {
+      size_t a = bond[0];
+      size_t b = bond[1];
+      // Process each bond once by enforcing a < b
+      if (a > b) continue; // Skip if bond is reversed
+      for (auto c : adj_list[a]) {
+        if (c == b) continue;
+        for (auto d : adj_list[b]) {
+          if (d == a || d == c) continue;
+          // Enforce c < d to avoid duplicates
+          if (c < d) {
+            torsions.push_back({c, a, b, d});
+          }
         }
-
-        std::vector<std::array<size_t, 4>> torsions;
-        for(const auto& [a, b] : bonds) {
-            for(auto c : adj_list[a]) {
-                if(c == b) continue;
-                for(auto d : adj_list[b]) {
-                    if(d == a || d == c) continue;
-                    torsions.push_back({c, a, b, d});
-                }
-            }
-        }
-
-        // Remove duplicates
-        std::sort(torsions.begin(), torsions.end());
-        auto last = std::unique(torsions.begin(), torsions.end());
-        torsions.erase(last, torsions.end());
-        
-        return torsions;
+      }
     }
+    return torsions;
+  }
 };
 
 class EnergyCalculator {
@@ -184,8 +183,8 @@ private:
   std::unordered_set<std::pair<size_t, size_t>, PairHash> excluded_pairs;
 
   // Scaling factors for 1-4 interactions
-  static constexpr double vdw_14_scale = 0.25;  // Missing constant
-  static constexpr double elec_14_scale = 0.75;
+  static constexpr double vdw_14_scale = 0.5;  // Missing constant
+  static constexpr double elec_14_scale = 0.5;
 
   const Parameters::UFFAtom& get_params(const std::string& type) const {
     try {
@@ -554,7 +553,7 @@ public:
         // Case 2: sp2-sp2
         // Calculate V using equation 17 from UFF paper
         V = 5.0 * std::sqrt(params_j.U1 * params_k.U1) * 
-          (1.0 + 4.18 * std::log(bond_order))/2.0;
+          (1.0 + 4.18 * std::log(bond_order));
         n = 2;
         cos_term = 1.0; // phi0 = 180°
       } else if (is_sp2_sp3) {

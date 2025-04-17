@@ -1,4 +1,3 @@
-// uff.hpp
 #pragma once
 #include <array>
 #include <unordered_map>
@@ -15,6 +14,7 @@
 #include <set>
 #include <iostream>
 #include <tuple>
+#include <utility>
 
 namespace UFF {
 
@@ -35,6 +35,7 @@ enum HybridizationType {
 
 /**
  * @brief Constants used throughout the UFF implementation
+ * RDKIT REF: ForceFields::UFF::Params namespace constants
  */
 namespace Constants {
 constexpr double kcal_to_eV = 0.0433641;
@@ -45,6 +46,7 @@ constexpr double deg2rad = pi / 180.0;
 
 /**
  * @brief 3D vector structure with common vector operations
+ * RDKIT REF: RDGeom::Point3D in RDKit
  */
 struct Vec3 : std::array<double, 3> {
   using Base = std::array<double, 3>;
@@ -105,6 +107,18 @@ struct Vec3 : std::array<double, 3> {
     result[2] = (*this)[0]*other[1] - (*this)[1]*other[0];
     return result;
   }
+  
+  /**
+   * @brief Create a normalized vector with the same direction
+   */
+  void normalize() {
+    double len = norm();
+    if (len > 1e-8) {
+      (*this)[0] /= len;
+      (*this)[1] /= len;
+      (*this)[2] /= len;
+    }
+  }
 };
 
 /**
@@ -119,6 +133,7 @@ inline Vec3 operator*(double scalar, const Vec3& v) noexcept {
 
 /**
  * @brief Atom structure containing type, position, and charge information
+ * RDKIT REF: Similar to RDKit's atom representation
  */
 struct Atom {
   std::string type;
@@ -128,6 +143,7 @@ struct Atom {
 
 /**
  * @brief Energy components container for tracking individual energy contributions
+ * RDKIT REF: ForceFields::ForceField::calcEnergy() which calculates these components
  */
 struct EnergyComponents {
   double bond_energy = 0.0;
@@ -163,6 +179,7 @@ struct EnergyComponents {
 namespace Parameters {
 /**
  * @brief UFF atom parameters for energy calculations
+ * RDKIT REF: ForceFields::UFF::AtomicParams
  */
 struct UFFAtom {
   double r1;          ///< Valence bond radius
@@ -187,6 +204,12 @@ struct UFFAtom {
 
 // Atom parameters map
 extern const std::unordered_map<std::string, UFFAtom> atom_parameters;
+
+        // Declaration of the electronegativity map
+        extern const std::unordered_map<std::string, double> electronegativity;
+        
+        // Function to get electronegativity with fallback
+        double get_electronegativity(const std::string& uff_type);
 }
 
 /**
@@ -210,6 +233,7 @@ struct PairHash {
 
 /**
  * @brief Utility class for building molecular topology
+ * RDKIT REF: RDKit's topology building in ForceFields
  */
 class TopologyBuilder {
 public:
@@ -256,6 +280,7 @@ public:
 
 /**
  * @brief Main class for UFF energy calculations
+ * RDKIT REF: ForceFields::ForceField and ForceFields::UFF builders
  */
 class EnergyCalculator {
 private:
@@ -266,9 +291,9 @@ private:
   std::vector<std::array<size_t, 4>> inversions;
   std::unordered_set<std::pair<size_t, size_t>, PairHash> excluded_pairs;
 
-  // Scaling factors for 1-4 interactions
+  // Scaling factors for 1-4 interactions - matches RDKit values
   static constexpr double vdw_14_scale = 0.5;
-  static constexpr double elec_14_scale = 0.5;
+  static constexpr double elec_14_scale = 0.75;
 
   /**
    * @brief Get UFF atom parameters for a given atom type
@@ -377,6 +402,12 @@ private:
    */
   static double calculate_cos_Y(
       const Vec3& p1, const Vec3& p2, const Vec3& p3, const Vec3& p4);
+      
+  /**
+   * @brief Assign partial charges to atoms for electrostatic calculations
+   * Uses a simple electronegativity-based method
+   */
+  void assign_partial_charges();
 
 public:
   /**
@@ -402,6 +433,7 @@ public:
 
 /**
  * @brief XYZ file parser for molecular structures
+ * RDKIT REF: Based on RDKit's file reading functionality
  */
 class XYZParser {
 public:
@@ -415,13 +447,64 @@ public:
 
 private:
   /**
+   * @brief Process a single atom line from an XYZ file
+   * @param line The line to process
+   * @param atoms Vector to add the parsed atom to
+   * @param lineNum Line number for error reporting
+   * @param is_tinker_format Whether the file is in Tinker XYZ format
+   */
+  static void processAtomLine(const std::string& line, std::vector<Atom>& atoms, 
+                             int lineNum, bool is_tinker_format);
+
+  /**
+   * @brief Normalize element symbol to standard form
+   * @param raw_symbol Raw element symbol from XYZ file
+   * @return Normalized element symbol
+   */
+  static std::string normalize_element_symbol(const std::string& raw_symbol);
+
+  /**
    * @brief Map element symbols to UFF atom types
    * @param element Element symbol
    * @return UFF atom type string
    * @throws std::runtime_error for unsupported elements
    */
   static std::string map_element_to_uff(const std::string& element);
+  
+  /**
+   * @brief Refine atom types based on molecular geometry and connectivity
+   * @param atoms Vector of atoms with positions
+   */
+  static void refine_atom_types(std::vector<Atom>& atoms);
+  
+  /**
+   * @brief Get expected bond length between two atom types
+   * @param type1 First atom type
+   * @param type2 Second atom type
+   * @return Expected bond length in Angstroms
+   */
+  static double get_expected_bond_length(const std::string& type1, const std::string& type2);
+  
+  /**
+   * @brief Calculate distance between two atoms, handling periodic boundary conditions
+   * @param pos1 Position of first atom
+   * @param pos2 Position of second atom
+   * @param cell_dimensions Optional cell dimensions for periodic systems
+   * @return Distance in Angstroms
+   */
+  static double calculate_distance(const Vec3& pos1, const Vec3& pos2, 
+                                  const Vec3* cell_dimensions = nullptr);
+  
+  /**
+   * @brief Calculate bond angle between three atoms
+   * @param pos1 Position of first atom
+   * @param pos2 Position of central atom
+   * @param pos3 Position of third atom
+   * @param cell_dimensions Optional cell dimensions for periodic systems
+   * @return Angle in radians
+   */
+  static double calculate_angle(const Vec3& pos1, const Vec3& pos2, const Vec3& pos3, 
+                               const Vec3* cell_dimensions = nullptr);
 };
-
 
 } // namespace UFF

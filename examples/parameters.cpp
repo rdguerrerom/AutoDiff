@@ -222,5 +222,172 @@ const std::unordered_map<std::string, UFFAtom> atom_parameters = {
   {"No6+3", {1.679, 90, 3.248, 0.011, 12, 3.9, 0, 0, 3.475, 3.175, 1.9, SP3D2}},
   {"Lw6+3", {1.698, 90, 3.236, 0.011, 12, 3.9, 0, 0, 3.5, 3.2, 1.9, SP3D2}}
 };
+
+// Complete electronegativity values (Pauling scale)
+// Values from CRC Handbook of Chemistry and Physics, 97th Edition
+// Enhanced electronegativity map that uses UFF atom types
+// Based on Pauling electronegativities from CRC Handbook of Chemistry and Physics
+const std::unordered_map<std::string, double> electronegativity = {
+    // Hydrogen
+    {"H_", 2.20},   // Generic hydrogen
+    {"H_b", 2.20},  // Bridging hydrogen
+    
+    // Group 1: Alkali Metals
+    {"Li", 0.98},   // Lithium
+    {"Na", 0.93},   // Sodium
+    {"K", 0.82},    // Potassium
+    {"Rb", 0.82},   // Rubidium
+    {"Cs", 0.79},   // Cesium
+    {"Fr", 0.70},   // Francium
+    
+    // Group 2: Alkaline Earth Metals
+    {"Be3+2", 1.57}, // Beryllium
+    {"Mg3+2", 1.31}, // Magnesium
+    {"Ca6+2", 1.00}, // Calcium
+    {"Sr6+2", 0.95}, // Strontium
+    {"Ba6+2", 0.89}, // Barium
+    {"Ra6+2", 0.90}, // Radium
+    
+    // Group 3: Scandium group
+    {"Sc3+3", 1.36}, // Scandium
+    {"Y_3+3", 1.22}, // Yttrium
+    {"La3+3", 1.10}, // Lanthanum
+    {"Ac6+3", 1.10}, // Actinium
+    
+    // Group 4: Titanium group
+    {"Ti3+4", 1.54}, // Titanium
+    {"Ti6+4", 1.54},
+    {"Zr3+4", 1.33}, // Zirconium
+    {"Hf3+4", 1.30}, // Hafnium
+    
+    // Group 5: Vanadium group
+    {"V_3+5", 1.63}, // Vanadium
+    {"Nb3+5", 1.60}, // Niobium
+    {"Ta3+5", 1.50}, // Tantalum
+    
+    // Group 6: Chromium group
+    {"Cr6+3", 1.66}, // Chromium
+    {"Mo6+6", 2.16}, // Molybdenum
+    {"W_6+6", 2.36}, // Tungsten
+    
+    // Group 7: Manganese group
+    {"Mn6+2", 1.55}, // Manganese
+    {"Tc6+5", 1.90}, // Technetium
+    {"Re6+5", 1.90}, // Rhenium
+    
+    // Group 8-10: Iron, Cobalt, Nickel groups
+    {"Fe3+2", 1.83}, // Iron
+    {"Fe6+2", 1.83},
+    {"Co3+2", 1.88}, // Cobalt
+    {"Ni4+2", 1.91}, // Nickel
+    {"Ru6+2", 2.20}, // Ruthenium
+    {"Os6+6", 2.20}, // Osmium
+    {"Rh6+3", 2.28}, // Rhodium
+    {"Ir6+3", 2.20}, // Iridium
+    {"Pd4+2", 2.20}, // Palladium
+    {"Pt4+2", 2.28}, // Platinum
+    
+    // Group 11: Copper group
+    {"Cu3+1", 1.90}, // Copper
+    {"Ag3+1", 1.93}, // Silver
+    {"Au4+3", 2.54}, // Gold
+    
+    // Group 12: Zinc group
+    {"Zn3+2", 1.65}, // Zinc
+    {"Cd3+2", 1.69}, // Cadmium
+    {"Hg1+2", 2.00}, // Mercury
+    {"Hg3+2", 2.00},
+    
+    // Group 13: Boron group
+    {"B_2", 2.04},   // Boron (sp2)
+    {"B_3", 2.04},   // Boron (sp3)
+    {"Al3", 1.61},   // Aluminum
+    {"Ga3+3", 1.81}, // Gallium
+    {"In3+3", 1.78}, // Indium
+    {"Tl3+3", 1.62}, // Thallium
+    
+    // Group 14: Carbon group
+    {"C_1", 2.55},   // Carbon (sp)
+    {"C_2", 2.55},   // Carbon (sp2)
+    {"C_3", 2.55},   // Carbon (sp3)
+    {"C_R", 2.55},   // Carbon (aromatic)
+    {"Si3", 1.90},   // Silicon
+    {"Ge3", 2.01},   // Germanium
+    {"Sn3", 1.96},   // Tin
+    {"Pb3", 2.33},   // Lead
+    
+    // Group 15: Nitrogen group
+    {"N_1", 3.04},   // Nitrogen (sp)
+    {"N_2", 3.04},   // Nitrogen (sp2)
+    {"N_3", 3.04},   // Nitrogen (sp3)
+    {"N_R", 3.04},   // Nitrogen (aromatic)
+    {"P_3+3", 2.19}, // Phosphorus
+    {"P_3+5", 2.19}, // Phosphorus
+    {"As3+3", 2.18}, // Arsenic
+    {"Sb3+3", 2.05}, // Antimony
+    {"Bi3+3", 2.02}, // Bismuth
+    
+    // Group 16: Oxygen group
+    {"O_1", 3.44},   // Oxygen (sp)
+    {"O_2", 3.44},   // Oxygen (sp2)
+    {"O_3", 3.44},   // Oxygen (sp3)
+    {"O_R", 3.44},   // Oxygen (aromatic)
+    {"S_2", 2.58},   // Sulfur (sp2)
+    {"S_3+2", 2.58}, // Sulfur (sp3)
+    {"S_3+4", 2.58}, // Sulfur (+4)
+    {"S_3+6", 2.58}, // Sulfur (+6)
+    {"S_R", 2.58},   // Sulfur (aromatic)
+    {"Se3+2", 2.55}, // Selenium
+    {"Te3+2", 2.10}, // Tellurium
+    {"Po3+2", 2.00}, // Polonium
+    
+    // Group 17: Halogens
+    {"F_", 3.98},    // Fluorine
+    {"Cl", 3.16},    // Chlorine
+    {"Br", 2.96},    // Bromine
+    {"I_", 2.66},    // Iodine
+    {"At", 2.20},    // Astatine
+    
+    // Group 18: Noble Gases
+    {"He4+4", 0.00}, // Helium - no established electronegativity 
+    {"Ne4+4", 0.00}, // Neon - no established electronegativity
+    {"Ar4+4", 0.00}, // Argon - no established electronegativity
+    {"Kr4+4", 2.60}, // Krypton
+    {"Xe4+4", 2.60}, // Xenon
+    {"Rn4+4", 0.00}, // Radon - no established electronegativity
+    
+    // Lanthanides
+    {"Ce6+3", 1.12}, // Cerium
+    {"Pr6+3", 1.13}, // Praseodymium
+    {"Nd6+3", 1.14}, // Neodymium
+    {"Pm6+3", 1.13}, // Promethium
+    {"Sm6+3", 1.17}, // Samarium
+    {"Eu6+3", 1.20}, // Europium
+    {"Gd6+3", 1.20}, // Gadolinium
+    {"Tb6+3", 1.22}, // Terbium
+    {"Dy6+3", 1.23}, // Dysprosium
+    {"Ho6+3", 1.24}, // Holmium
+    {"Er6+3", 1.24}, // Erbium
+    {"Tm6+3", 1.25}, // Thulium
+    {"Yb6+3", 1.10}, // Ytterbium
+    {"Lu6+3", 1.27}, // Lutetium
+    
+    // Actinides
+    {"Th6+4", 1.30}, // Thorium
+    {"Pa6+4", 1.50}, // Protactinium
+    {"U_6+4", 1.38}, // Uranium
+    {"Np6+4", 1.36}, // Neptunium
+    {"Pu6+4", 1.28}, // Plutonium
+    {"Am6+3", 1.30}, // Americium
+    {"Cm6+3", 1.30}, // Curium
+    {"Bk6+3", 1.30}, // Berkelium
+    {"Cf6+3", 1.30}, // Californium
+    {"Es6+3", 1.30}, // Einsteinium
+    {"Fm6+3", 1.30}, // Fermium
+    {"Md6+3", 1.30}, // Mendelevium
+    {"No6+3", 1.30}, // Nobelium
+    {"Lr6+3", 1.30}  // Lawrencium
+};
+
 }// namespace Parameters
 } //namespace UFF
